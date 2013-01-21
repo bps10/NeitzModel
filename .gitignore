@@ -1,0 +1,7 @@
+.elasticbeanstalk/
+.DS_Store
+.ebextensions/
+NeitzModel/local_settings.py
+*.pyc
+build/
+db.db
