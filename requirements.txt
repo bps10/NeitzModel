@@ -5,4 +5,5 @@ boto==2.7.0
 distribute==0.6.30
 django-storages==1.1.6
 numpy==1.6.2
+scipy==0.7.0
 wsgiref==0.1.2
