@@ -320,48 +320,44 @@ var svg = d3.select("body").append("svg")
 
     // loc8, options //	
 
-		
-    d3.select("body")
-        .append("button")
-        .attr("id", "runButton")
-        .attr("value", true)
-        .text("update");
                   
 
 	d3.select("#coneInput").on("change", changeCone);
     d3.select("#opticSetting1").on("change",changeOpt1);
     d3.select("#opticSetting2").on("change",changeOpt2);
-    d3.select("#runButton").on("click", update);
+    //d3.select("#runButton").on("click", update);
     
     
-    var Opt1 = '', Opt2 = '', spacing=2;
+    var Opt1 = ['offAxis','40deg'],
+        Opt2 = ['offAxis','20deg'],
+        spacing=2,
+        updateEvent = {};
     
     function changeOpt1() {
         Opt1 = this.value.split(" : ")
-        console.log(Opt1);
     }
     
     function changeOpt2() {
         Opt2 = this.value.split(" : ")
-        console.log(Opt2);
-    }
-    
-    function update() {
-        console.log([spacing, Opt1, Opt2]);
     }
     
 
-	
-	function changeCone() {
+
+    function changeCone() {
         spacing = this.value;
         
-		d3.select("#cone_val").remove();
-			  
-		d3.select("#cone_text").append("span")
-		 .attr("id", "cone_val")
-		 .style("color", "black")
-		 .text(spacing + " arcmin");
+        d3.select("#cone_val").remove();
+        
+        d3.select("#cone_text").append("span")
+        .attr("id", "cone_val")
+        .style("color", "black")
+        .text(spacing + " arcmin");
+        
+    };
 
-	};
+
+    
+	
+
 
 
