@@ -160,7 +160,10 @@
         </select>
     </div>
             
-    
+<script>
+    var dataOpt = {{ MTF }};
+
+</script>
     
 <script>
 
@@ -305,7 +308,15 @@ var line = d3.svg.line()
 .y(function(d) { return y1(d.y); });
 
 
-var data = spikeGen(), data2 = [];   
+var dat = dataOpt;
+var data = [];
+
+for (var i=0; i<dat.length; i++) {
+    data.push({"x": i, "y": dat[i]});
+}
+console.log(data);
+    
+var data2 = [];   
     
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -314,7 +325,7 @@ var svg = d3.select("body").append("svg")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     x1.domain(d3.extent(data, function(d) { return d.x; }));
-    y1.domain([-10,30]);
+    y1.domain(d3.extent(data, function(d) { return d.y; }));
 
     x2.domain([Math.pow(10,2),Math.pow(10,6.6)]);
     y2.domain([0,25]);
@@ -346,7 +357,7 @@ var svg = d3.select("body").append("svg")
 
     svg.append("g")
     .attr("class", "y axis")
-    .attr("transform", "translate(440,-10)")
+    .attr("transform", "translate(430,-10)")
     .call(yAxis)
     .append("text")
     .attr("transform", "rotate(-90)")
@@ -355,6 +366,11 @@ var svg = d3.select("body").append("svg")
     .style("text-anchor", "end")
     .text("modulation");
 	
+    svg.append("path")
+    .datum(data)
+    .attr("transform", "translate(450,-10)")
+    .attr("class", "line")
+    .attr("d", line);
 	
     svg.append("g")
     .attr("class", "x axis")
