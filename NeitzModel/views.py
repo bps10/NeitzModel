@@ -2,9 +2,9 @@ from django.template import RequestContext, loader
 from django.http import HttpResponse
 from django.utils import simplejson
 
-from eschaton.eschaton import eye, cones
+from eschaton.eschaton import eye#, cones
 schemEye = eye.eyeModel.SchematicEye().returnOSLOdata()
-coneDOG = cones.ConeReceptiveFields().returnReceptiveField()
+#coneDOG = cones.ConeReceptiveFields().returnReceptiveField()
 
 # diffraction optics:
 opticsDiff = schemEye['onAxis']['diffract'].tolist()
