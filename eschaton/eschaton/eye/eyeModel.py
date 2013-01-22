@@ -2,7 +2,10 @@ import os
 import shlex
 import numpy as np
 
-from .. scene.DataManip import rad2deg
+def rad2deg(radians):
+    """convert radians to degrees
+        """
+    return radians*180.0/np.pi
 
 class SchematicEye(object):
     """
