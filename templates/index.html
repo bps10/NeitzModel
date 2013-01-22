@@ -48,7 +48,7 @@
 
 	.line2 {
 		fill: none;
-		stroke: black;
+		stroke: steelblue;
 		stroke-width: 1.5px;
 	}
 
@@ -161,8 +161,8 @@
     </div>
             
 <script>
-    var dataOpt = {{ MTF }};
-
+    var dataOpt = {{ MTF_A }};
+    var dataOptB = {{ MTF_B }};
 </script>
     
 <script>
@@ -284,39 +284,24 @@ var yAxis6 = d3.svg.axis()
     .orient("left");	
 
 
-var randomNum = d3.random.normal(0, 1.5);
-
-function spikeGen() {
-    var trace = [0, 0, 0, 0, 0, 0, 10, 22, 23, 20, 10, 0, -4, -7, -3, -3, -2,
-                 -2, -1, 0, 0, 0, 0, 0, 0, 0];
-    var data = [];
-    
-    for (var i=0; i < trace.length; i++) {
-        data.push({"x": 2* i / 100.0, "y": trace[i] + randomNum() });
-    };
-    return data;
-};
-
-var sigmoid = function(k, x) {
-    var R_m = 24;
-    return (R_m * ( 1 - Math.pow(Math.E,(-k*x))));
-};
-
 
 var line = d3.svg.line()
 .x(function(d) { return x1(d.x); })
 .y(function(d) { return y1(d.y); });
 
 
-var dat = dataOpt;
-var data = [];
+function dataFormater(input) {
+    var dat = []
+    for (var i=0; i<input.length; i++) {
+        dat.push({"x": i, "y": input[i]});
+        };
+    return dat
+};
 
-for (var i=0; i<dat.length; i++) {
-    data.push({"x": i, "y": dat[i]});
-}
-console.log(data);
+
+var data = dataFormater(dataOpt), data2 = dataFormater(dataOptB);
     
-var data2 = [];   
+
     
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -371,7 +356,14 @@ var svg = d3.select("body").append("svg")
     .attr("transform", "translate(450,-10)")
     .attr("class", "line")
     .attr("d", line);
-	
+
+    svg.append("path")
+    .datum(data2)
+    .attr("transform", "translate(450,-10)")
+    .attr("class", "line2")
+    .attr("d", line);
+    
+    
     svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(450,600)")
