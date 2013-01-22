@@ -8,5 +8,3 @@ db.db
 .ebextensions/python.config
 *.log
 *.pot
-local_settings.py
-
