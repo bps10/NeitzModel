@@ -175,13 +175,12 @@ var svg = d3.select("body").append("svg")
 
     svg.append("g")
     .attr("class", "y axis")
-    .attr("transform", "translate(430,-10)")
+    .attr("transform", "translate(440,-10)")
     .call(yAxis)
     .append("text")
     .attr("transform", "rotate(-90)")
-    .attr("y", 6)
-    .attr("dy", ".71em")
-    .style("text-anchor", "end")
+    .attr("y", -40)
+    .attr("x", -150)
     .text("modulation");
 
     // figure 1 lines //
@@ -221,9 +220,8 @@ var svg = d3.select("body").append("svg")
     .call(yAxis2)
     .append("text")
     .attr("transform", "rotate(-90)")
-    .attr("y", 6)
-    .attr("dy", ".71em")
-    .style("text-anchor", "end")
+    .attr("y", -40)
+    .attr("x", -150)
     .text("density");
     
 
@@ -244,9 +242,8 @@ var svg = d3.select("body").append("svg")
     .call(yAxis3)
     .append("text")
     .attr("transform", "rotate(-90)")
-    .attr("y", 6)
-    .attr("dy", ".71em")
-    .style("text-anchor", "end")
+    .attr("y", -40)
+    .attr("x", -150)
     .text("density");
 	
 	
@@ -267,9 +264,8 @@ var svg = d3.select("body").append("svg")
     .call(yAxis4)
     .append("text")
     .attr("transform", "rotate(-90)")
-    .attr("y", 6)
-    .attr("dy", ".71em")
-    .style("text-anchor", "end")
+    .attr("y", -40)
+    .attr("x", -150)
     .text("density");
 
     svg.append("g")
@@ -289,9 +285,8 @@ var svg = d3.select("body").append("svg")
     .call(yAxis5)
     .append("text")
     .attr("transform", "rotate(-90)")
-    .attr("y", 6)
-    .attr("dy", ".71em")
-    .style("text-anchor", "end")
+    .attr("y", -40)
+    .attr("x", -150)
     .text("density");
 
     // loc7, fig6 //	
@@ -312,9 +307,8 @@ var svg = d3.select("body").append("svg")
     .call(yAxis6)
     .append("text")
     .attr("transform", "rotate(-90)")
-    .attr("y", 6)
-    .attr("dy", ".71em")
-    .style("text-anchor", "end")
+    .attr("y", -40)
+    .attr("x", -150)
     .text("amplitude");
 	
 
@@ -340,11 +334,10 @@ var svg = d3.select("body").append("svg")
     function changeOpt2() {
         Opt2 = this.value.split(" : ")
     }
-    
-
 
     function changeCone() {
         spacing = this.value;
+        console.log(spacing);
         
         d3.select("#cone_val").remove();
         
