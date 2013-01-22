@@ -40,9 +40,15 @@
         fill-opacity: .9;
 	}
 
+    .diff {
+        fill: none;
+        stroke: black;
+        stroke-width: 1.5px;
+    }
+        
 	.line {
 		fill: none;
-		stroke: black;
+		stroke: green;
 		stroke-width: 1.5px;
 	}
 
@@ -159,8 +165,9 @@
             {% endfor %}
         </select>
     </div>
-            
+    
 <script>
+    var dataDif = {{ MTF_Dif }};
     var dataOpt = {{ MTF_A }};
     var dataOptB = {{ MTF_B }};
 </script>
@@ -299,7 +306,9 @@ function dataFormater(input) {
 };
 
 
-var data = dataFormater(dataOpt), data2 = dataFormater(dataOptB);
+var dataDif = dataFormater(dataDif);
+    data = dataFormater(dataOpt),
+    data2 = dataFormater(dataOptB);
     
 
     
@@ -350,7 +359,14 @@ var svg = d3.select("body").append("svg")
     .attr("dy", ".71em")
     .style("text-anchor", "end")
     .text("modulation");
-	
+
+    // figure 1 lines //
+    svg.append("path")
+    .datum(dataDif)
+    .attr("transform", "translate(450,-10)")
+    .attr("class", "diff")
+    .attr("d", line);
+    
     svg.append("path")
     .datum(data)
     .attr("transform", "translate(450,-10)")
