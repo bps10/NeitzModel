@@ -1,3 +1,4 @@
+
 .elasticbeanstalk/
 .DS_Store
 NeitzModel/local_settings.py
@@ -5,3 +6,7 @@ NeitzModel/local_settings.py
 build/
 db.db
 .ebextensions/python.config
+*.log
+*.pot
+local_settings.py
+
