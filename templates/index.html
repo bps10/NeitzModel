@@ -486,21 +486,23 @@ var svg = d3.select("body").append("svg")
     d3.select("#runButton").on("click", update);
     
     
-    var Opt1 = null, Opt2 = null, spacing=2;
+    var Opt1 = '', Opt2 = '', spacing=2;
     
     function changeOpt1() {
-        console.log(this.value);
+        Opt1 = this.value.split(" : ")
+        console.log(Opt1);
     }
     
     function changeOpt2() {
-        console.log(this.value);
+        Opt2 = this.value.split(" : ")
+        console.log(Opt2);
     }
     
     function update() {
-        console.log('spacing ' + spacing);
+        console.log([spacing, Opt1, Opt2]);
     }
     
-	var format = d3.format("g",3);
+
 	
 	function changeCone() {
         spacing = this.value;
