@@ -1,5 +1,5 @@
 import numpy as np
-from scipy import interpolate
+#from scipy import interpolate
 
 
 class ConeReceptiveFields(object):
@@ -46,12 +46,12 @@ class ConeReceptiveFields(object):
         """
         
         # traditional RF
-        N = 400
+        N = 300
         Xvals = np.arange(-15, 15, 10./ (2.0 * N) )
         
         RF_DOG = {}
         FFT_RF = {}
-        RF_SPLINE = {}
+        #RF_SPLINE = {}
         RField = {}
         
         for i, loc in enumerate(location):
@@ -63,12 +63,13 @@ class ConeReceptiveFields(object):
         
             ## spline interpolation handle
             length = np.floor(FFT_RF[loc].shape[0] / 2.) + 1 
-            RF_SPLINE[loc] = interpolate.splrep(Xvals[length:] * 60,
-                                            FFT_RF[loc][length:], s=0)
+            '''RF_SPLINE[loc] = interpolate.splrep(Xvals[length:] * 60,
+                                            FFT_RF[loc][length:], s=0)'''
 
-            RField[loc] = normRField(freqs, RF_SPLINE[loc])
+            RField[loc] = normRField(freqs, Xvals[length:] * 60,
+                                     FFT_RF[loc][length:])
             
-    
+        '''
         # manual method --- Jay's method:        
         spatial_frequencies = np.arange(1, length - 1)
     
@@ -89,9 +90,7 @@ class ConeReceptiveFields(object):
             Jay_RF[loc] = interpolate.splrep(Xvals[length:] * 60,
                                                     cone_response, s=0)
 
-            Jay_RField[loc] = normJayRField(freqs, Jay_RF[loc])
-
-            
+            Jay_RField[loc] = normJayRField(freqs, Jay_RF[loc])   
     
         self.receptive_field =  {
                             'length': length,
@@ -103,13 +102,24 @@ class ConeReceptiveFields(object):
                             'xvals': Xvals
                             }
                             
-    def returnReceptiveField(self):  
+        '''
+        self.receptive_field =  {
+            'length': length,
+            'dog': RF_DOG,
+            'coneResponse': {'fft': FFT_RF,},
+            #'spline': {'fft':RF_SPLINE,},
+            'RField': {'fft': RField,},
+            #'sineWave': sine_wave,
+            'xvals': Xvals
+            }
+
+    def returnReceptiveField(self):
         """
         Return a dictionary of receptive field data.
         """                  
         return self.receptive_field
 
-
+'''
 def normJayRField(freqs, jayRF):
     """return a normalized receptive field using a spline handle generated 
     using Jay's manual decomposition method.
@@ -117,7 +127,8 @@ def normJayRField(freqs, jayRF):
     foo = interpolate.splev(freqs[1:], jayRF, der = 0)
     rfield = foo / np.sum(foo)
     return rfield
-            
+'''
+
 def sineWave(thisFrequency, xvals):
     """Generate a sine wave
     
@@ -138,14 +149,15 @@ def sineWave(thisFrequency, xvals):
     
     return sWave
                                      
-                                     
-def normRField(freqs, spline):
+
+def normRField(freqs, xp, yp):
     """return a normalized receptive field generated from a spline interpolation
     handle.
     """
-    foo = interpolate.splev(freqs[1:], spline, der = 0)
+    foo = np.interp(freqs[1:], xp, yp)
     rfield = foo / np.sum(foo)  
     return rfield
+
 
 def Fourier(recField, N):
     """return a normalized Fourier transformed receptive field.
@@ -153,6 +165,7 @@ def Fourier(recField, N):
     FFT_RF = np.fft.fftshift(np.abs(np.fft.fft(recField))) / np.sqrt(2 * N)
     normFFT = FFT_RF / np.sum(FFT_RF)
     return normFFT     
+
 
 def DoG(xvals, excite_SD, inhibit_SD):
     """Generate a differenc of gaussian receptive field model.

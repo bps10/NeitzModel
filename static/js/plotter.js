@@ -1,7 +1,7 @@
 ////////////////////////////
 // locations:plots        //
-//   5:image    1:plot1   //
-//   6:plot5    2:plot2   //
+//   5:image    1:MTF     //
+//   6:DOG      2:plot2   //
 //   7:plot6    3:plot3   //
 //   8:button   4:plot4   //
 ////////////////////////////
@@ -120,8 +120,11 @@ var line = d3.svg.line()
 .x(function(d) { return x1(d.x); })
 .y(function(d) { return y1(d.y); });
 
+var line = d3.svg.line()
+.x(function(d) { return x6(d.x); })
+.y(function(d) { return y6(d.y); });
 
-function dataFormater(input) {
+function dataFormatter(input) {
     var dat = []
     for (var i=0; i<input.length; i++) {
         dat.push({"x": i, "y": input[i]});
@@ -129,10 +132,21 @@ function dataFormater(input) {
     return dat
 };
 
+function dogFormatter(xvals, DOG) {
+    var dat = []
+    for (var i=0; i<xvals.length; i++) {
+        dat.push({"x": xvals[i], "y": DOG[i]})
+    };
+    return dat;
+};
 
-var dataDif = dataFormater(dataDif);
-    data = dataFormater(dataOpt),
-    data2 = dataFormater(dataOptB);
+
+var dataDif = dataFormatter(dataDif);
+    data = dataFormatter(dataOpt),
+    data2 = dataFormatter(dataOptB);
+
+
+dataDoG = dogFormatter(DOG_xvals,DOG);
     
 
     
@@ -157,8 +171,8 @@ var svg = d3.select("body").append("svg")
     x5.domain([Math.pow(10,2),Math.pow(10,6.6)]);
     y5.domain([0,25]); 
 
-    x6.domain([-15,15]);
-    y6.domain([-0.3,1]); 
+    x6.domain(d3.extent(dataDoG, function(d) { return d.x; }));
+    y6.domain(d3.extent(dataDoG, function(d) { return d.y; }));
     
     // x,y axes //	
     
@@ -202,7 +216,7 @@ var svg = d3.select("body").append("svg")
     .attr("class", "line2")
     .attr("d", line);
     
-    
+    // figure 2 //
     svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(450,600)")
@@ -310,9 +324,14 @@ var svg = d3.select("body").append("svg")
     .attr("y", -40)
     .attr("x", -150)
     .text("amplitude");
-	
 
-    // loc8, options //	
+    svg.append("path")
+    .datum(dataDoG)
+    .attr("transform", "translate(30,690)")
+    .attr("class", "lineDoG")
+    .attr("d", line);
+
+    // loc8, options //
 
                   
 

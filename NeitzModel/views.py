@@ -2,9 +2,12 @@ from django.template import RequestContext, loader
 from django.http import HttpResponse
 from django.utils import simplejson
 
-from eschaton.eschaton import eye#, cones
+from eschaton.eschaton import eye, cones
 schemEye = eye.eyeModel.SchematicEye().returnOSLOdata()
-#coneDOG = cones.ConeReceptiveFields().returnReceptiveField()
+coneDOG = cones.dogRFields.ConeReceptiveFields(schemEye['freqs']).returnReceptiveField()
+
+DOG = coneDOG['dog']['periph'].tolist()
+DOG_xvals = coneDOG['xvals'].tolist()
 
 # diffraction optics:
 opticsDiff = schemEye['onAxis']['diffract'].tolist()
@@ -25,7 +28,9 @@ def index(request):
         c = RequestContext(request,{'opticDict':schemEye,
                            'MTF_Dif':opticsDiff,
                            'MTF_A':getMTF('onAxis','1m'),
-                           'MTF_B':getMTF('onAxis','20ft'),})
+                           'MTF_B':getMTF('onAxis','20ft'),
+                           'DOG': DOG,
+                           'DOG_xvals':DOG_xvals,})
 
     if request.method == 'POST':
         try:
@@ -38,7 +43,9 @@ def index(request):
             c = RequestContext(request,{'opticDict':schemEye,
                                'MTF_Dif':opticsDiff,
                                'MTF_A':getMTF(optic1[0],optic1[1]),
-                               'MTF_B':getMTF(optic2[0],optic2[1]),})
+                               'MTF_B':getMTF(optic2[0],optic2[1]),
+                               'DOG': DOG,
+                               'DOG_xvals':DOG_xvals,})
 
         except:
             print 'nope'
