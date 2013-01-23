@@ -25,7 +25,7 @@ var y1 = d3.scale.linear()
 var x2 = d3.scale.log()
     .range([0, xaxisWidth]);
     
-var y2 = d3.scale.linear()
+var y2 = d3.scale.log()
     .range([yaxisWidth, 0]);
 
 var x3 = d3.scale.log()
@@ -37,13 +37,13 @@ var y3 = d3.scale.log()
 var x4 = d3.scale.log()
     .range([0, xaxisWidth]);
     
-var y4 = d3.scale.linear()
+var y4 = d3.scale.log()
     .range([yaxisWidth, 0]);
 	
 var x5 = d3.scale.log()
     .range([0, xaxisWidth]);
     
-var y5 = d3.scale.linear()
+var y5 = d3.scale.log()
     .range([yaxisWidth, 0]);
 
 var x6 = d3.scale.linear()
@@ -66,7 +66,7 @@ var yAxis = d3.svg.axis()
 	
 var xAxis2 = d3.svg.axis()
     .scale(x2)
-    .ticks(5)
+    .ticks(2)
     .orient("bottom");
 
 var yAxis2 = d3.svg.axis()
@@ -76,7 +76,7 @@ var yAxis2 = d3.svg.axis()
 
 var xAxis3 = d3.svg.axis()
     .scale(x3)
-    .ticks(5)
+    .ticks(2)
     .orient("bottom");
 
 var yAxis3 = d3.svg.axis()
@@ -96,7 +96,7 @@ var yAxis4 = d3.svg.axis()
 
 var xAxis5 = d3.svg.axis()
     .scale(x5)
-    .ticks(5)
+    .ticks(2)
     .orient("bottom");
 
 var yAxis5 = d3.svg.axis()
@@ -124,6 +124,9 @@ var lineFFT = d3.svg.line()
 .x(function(d) { return x3(d.x); })
 .y(function(d) { return y3(d.y); });
 
+var linePow = d3.svg.line()
+.x(function(d) { return x5(d.x); })
+.y(function(d) { return y5(d.y); });
 
 var lineDoG = d3.svg.line()
 .x(function(d) { return x6(d.x); })
@@ -150,9 +153,10 @@ function dogFormatter(xvals, DOG) {
 var dataDif = dataFormatter(dataDif);
     data = dataFormatter(dataOpt),
     data2 = dataFormatter(dataOptB),
-    dataFFT = dataFormatter(DOG_fft);
+    dataFFT = dataFormatter(DOG_fft),
+    dataPow = dataFormatter(powerLaw);
 
-console.log(dataFFT);
+//console.log(powerLaw);
 
 var dataDoG = dogFormatter(DOG_xvals,DOG);
     
@@ -174,10 +178,10 @@ var svg = d3.select("body").append("svg")
     y3.domain(d3.extent(dataFFT, function(d) { return d.y; }));
 
     x4.domain([Math.pow(10,2),Math.pow(10,6.6)]);
-    y4.domain([0,25]); 
+    y4.domain([0,25]);
 
-    x5.domain([Math.pow(10,2),Math.pow(10,6.6)]);
-    y5.domain([0,25]); 
+    x5.domain(d3.extent(dataPow, function(d) { return d.x; }));
+    y5.domain(d3.extent(dataPow, function(d) { return d.y; }));
 
     x6.domain(d3.extent(dataDoG, function(d) { return d.x; }));
     y6.domain(d3.extent(dataDoG, function(d) { return d.y; }));
@@ -304,6 +308,7 @@ var svg = d3.select("body").append("svg")
     .attr("x", -150)
     .text("density");
 
+    // loc 6, figure 5 //
     svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(40,600)")
@@ -317,7 +322,7 @@ var svg = d3.select("body").append("svg")
 
     svg.append("g")
     .attr("class", "y axis")
-    .attr("transform", "translate(40,340)")
+    .attr("transform", "translate(30,340)")
     .call(yAxis5)
     .append("text")
     .attr("transform", "rotate(-90)")
@@ -325,7 +330,14 @@ var svg = d3.select("body").append("svg")
     .attr("x", -150)
     .text("density");
 
-    // loc7, fig6 //	
+    svg.append("path")
+    .datum(dataPow)
+    .attr("transform", "translate(40, 340)")
+    .attr("class", "lineDoG")
+    .attr("data-legend",opt2)
+    .attr("d", linePow);
+
+    // loc7, fig6 //
     svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(40,950)")

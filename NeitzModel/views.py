@@ -2,25 +2,36 @@ from django.template import RequestContext, loader
 from django.http import HttpResponse
 from django.utils import simplejson
 
+# eschaton imports
 from eschaton.eschaton import eye, cones
+from eschaton.eschaton.scene import powerlaw
+
 schemEye = eye.eyeModel.SchematicEye().returnOSLOdata()
 coneDOG = cones.dogRFields.ConeReceptiveFields(schemEye['freqs']).returnReceptiveField()
+powerlaw = powerlaw.normPowerlaw
 
+# DoG receptive field:
 DOG = coneDOG['dog']['periph'].tolist()
 DOG_xvals = coneDOG['xvals'].tolist()
 DOG_fft = coneDOG['RField']['fft']['periph'][1:].tolist()
 
-# diffraction optics:
-opticsDiff = schemEye['onAxis']['diffract'].tolist()
 
-# optional optics:
+# optics:
 def getMTF(axis,objDist):
     return schemEye[axis][objDist].tolist()
 
 def formatPost(optic):
     return optic.split(" : ")
+opticsDiff = getMTF('onAxis','diffract')
 
 
+# image, powerlaw:
+def getPowerlaw(exponent=2):
+    xlen = len(getMTF('onAxis','1m'))
+    return powerlaw(xlen, exponent)
+
+
+# view
 def index(request):
     t = loader.get_template('index.html')
     
@@ -35,7 +46,8 @@ def index(request):
                            'MTF_B':getMTF('onAxis','20ft'),
                            'DOG': DOG,
                            'DOG_xvals':DOG_xvals,
-                           'DOG_fft': DOG_fft,})
+                           'DOG_fft': DOG_fft,
+                           'powerLaw': getPowerlaw()})
 
     if request.method == 'POST':
         try:
@@ -54,7 +66,8 @@ def index(request):
                                'MTF_B':getMTF(optic2[0],optic2[1]),
                                'DOG': DOG,
                                'DOG_xvals': DOG_xvals,
-                               'DOG_fft': DOG_fft,})
+                               'DOG_fft': DOG_fft,
+                               'powerLaw': getPowerlaw()})
 
         except:
             print 'nope'
