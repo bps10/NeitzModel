@@ -5,6 +5,6 @@ NeitzModel/local_settings.py
 *.pyc
 build/
 db.db
-#.ebextensions/python.config
+.ebextensions/python.config
 *.log
 *.pot
