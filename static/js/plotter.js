@@ -120,7 +120,7 @@ var line = d3.svg.line()
 .x(function(d) { return x1(d.x); })
 .y(function(d) { return y1(d.y); });
 
-var line = d3.svg.line()
+var lineDoG = d3.svg.line()
 .x(function(d) { return x6(d.x); })
 .y(function(d) { return y6(d.y); });
 
@@ -329,7 +329,7 @@ var svg = d3.select("body").append("svg")
     .datum(dataDoG)
     .attr("transform", "translate(30,690)")
     .attr("class", "lineDoG")
-    .attr("d", line);
+    .attr("d", lineDoG);
 
     // loc8, options //
 
