@@ -8,6 +8,7 @@ coneDOG = cones.dogRFields.ConeReceptiveFields(schemEye['freqs']).returnReceptiv
 
 DOG = coneDOG['dog']['periph'].tolist()
 DOG_xvals = coneDOG['xvals'].tolist()
+DOG_fft = coneDOG['RField']['fft']['periph'][1:].tolist()
 
 # diffraction optics:
 opticsDiff = schemEye['onAxis']['diffract'].tolist()
@@ -25,12 +26,14 @@ def index(request):
     
     if request.method == 'GET':
         
-        c = RequestContext(request,{'opticDict':schemEye,
+        c = RequestContext(request,
+                           {'opticDict':schemEye,
                            'MTF_Dif':opticsDiff,
                            'MTF_A':getMTF('onAxis','1m'),
                            'MTF_B':getMTF('onAxis','20ft'),
                            'DOG': DOG,
-                           'DOG_xvals':DOG_xvals,})
+                           'DOG_xvals':DOG_xvals,
+                           'DOG_fft': DOG_fft,})
 
     if request.method == 'POST':
         try:
@@ -40,12 +43,14 @@ def index(request):
             optic2 = request.POST['optic2']
             optic2 = formatPost(optic2)
                     
-            c = RequestContext(request,{'opticDict':schemEye,
+            c = RequestContext(request,
+                               {'opticDict':schemEye,
                                'MTF_Dif':opticsDiff,
                                'MTF_A':getMTF(optic1[0],optic1[1]),
                                'MTF_B':getMTF(optic2[0],optic2[1]),
                                'DOG': DOG,
-                               'DOG_xvals':DOG_xvals,})
+                               'DOG_xvals': DOG_xvals,
+                               'DOG_fft': DOG_fft,})
 
         except:
             print 'nope'

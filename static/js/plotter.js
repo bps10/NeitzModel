@@ -31,7 +31,7 @@ var y2 = d3.scale.linear()
 var x3 = d3.scale.log()
     .range([0, xaxisWidth]);
     
-var y3 = d3.scale.linear()
+var y3 = d3.scale.log()
     .range([yaxisWidth, 0]);
 
 var x4 = d3.scale.log()
@@ -120,14 +120,20 @@ var line = d3.svg.line()
 .x(function(d) { return x1(d.x); })
 .y(function(d) { return y1(d.y); });
 
+var lineFFT = d3.svg.line()
+.x(function(d) { return x3(d.x); })
+.y(function(d) { return y3(d.y); });
+
+
 var lineDoG = d3.svg.line()
 .x(function(d) { return x6(d.x); })
 .y(function(d) { return y6(d.y); });
 
+
 function dataFormatter(input) {
     var dat = []
     for (var i=0; i<input.length; i++) {
-        dat.push({"x": i, "y": input[i]});
+        dat.push({"x": i+1, "y": input[i]});
         };
     return dat
 };
@@ -143,10 +149,12 @@ function dogFormatter(xvals, DOG) {
 
 var dataDif = dataFormatter(dataDif);
     data = dataFormatter(dataOpt),
-    data2 = dataFormatter(dataOptB);
+    data2 = dataFormatter(dataOptB),
+    dataFFT = dataFormatter(DOG_fft);
 
+console.log(dataFFT);
 
-dataDoG = dogFormatter(DOG_xvals,DOG);
+var dataDoG = dogFormatter(DOG_xvals,DOG);
     
 
     
@@ -162,8 +170,8 @@ var svg = d3.select("body").append("svg")
     x2.domain([Math.pow(10,2),Math.pow(10,6.6)]);
     y2.domain([0,25]);
 
-    x3.domain([Math.pow(10,2),Math.pow(10,6.6)]);
-    y3.domain([0,25]);    
+    x3.domain(d3.extent(dataFFT, function(d) { return d.x; }));
+    y3.domain(d3.extent(dataFFT, function(d) { return d.y; }));
 
     x4.domain([Math.pow(10,2),Math.pow(10,6.6)]);
     y4.domain([0,25]); 
@@ -238,7 +246,7 @@ var svg = d3.select("body").append("svg")
     .attr("x", -150)
     .text("density");
     
-
+    // figure 3 //
     svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(450,950)")
@@ -260,7 +268,13 @@ var svg = d3.select("body").append("svg")
     .attr("x", -150)
     .text("density");
 	
-	
+    svg.append("path")
+    .datum(dataFFT)
+    .attr("transform", "translate(450,690)")
+    .attr("class", "lineDoG")
+    .attr("d", lineFFT);
+
+    // figure 4 //
     svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(450,1300)")
