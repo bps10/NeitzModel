@@ -28,6 +28,8 @@ def index(request):
         
         c = RequestContext(request,
                            {'opticDict':schemEye,
+                           'optic1': 'farPeriph : 40deg',
+                           'optic2': 'farPeriph : 20deg',
                            'MTF_Dif':opticsDiff,
                            'MTF_A':getMTF('onAxis','1m'),
                            'MTF_B':getMTF('onAxis','20ft'),
@@ -45,6 +47,8 @@ def index(request):
                     
             c = RequestContext(request,
                                {'opticDict':schemEye,
+                               'optic1': request.POST['optic1'],
+                               'optic2': request.POST['optic2'],
                                'MTF_Dif':opticsDiff,
                                'MTF_A':getMTF(optic1[0],optic1[1]),
                                'MTF_B':getMTF(optic2[0],optic2[1]),

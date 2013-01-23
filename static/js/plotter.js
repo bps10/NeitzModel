@@ -182,7 +182,7 @@ var svg = d3.select("body").append("svg")
     x6.domain(d3.extent(dataDoG, function(d) { return d.x; }));
     y6.domain(d3.extent(dataDoG, function(d) { return d.y; }));
     
-    // x,y axes //	
+    // figure 1 lines //	
     
     svg.append("g")
     .attr("class", "x axis")
@@ -205,25 +205,33 @@ var svg = d3.select("body").append("svg")
     .attr("x", -150)
     .text("modulation");
 
-    // figure 1 lines //
     svg.append("path")
     .datum(dataDif)
     .attr("transform", "translate(470,-10)")
     .attr("class", "diff")
+    .attr("data-legend","diffraction")
     .attr("d", line);
     
     svg.append("path")
     .datum(data)
     .attr("transform", "translate(470,-10)")
     .attr("class", "line")
+    .attr("data-legend",opt1)
     .attr("d", line);
 
     svg.append("path")
     .datum(data2)
     .attr("transform", "translate(470,-10)")
     .attr("class", "line2")
+    .attr("data-legend",opt2)
     .attr("d", line);
-    
+
+    legend = svg.append("g")
+    .attr("class","legend")
+    .attr("transform","translate(700,20)")
+    .style("font-size","16px")
+    .call(d3.legend);
+
     // figure 2 //
     svg.append("g")
     .attr("class", "x axis")

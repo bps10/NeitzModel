@@ -6,8 +6,7 @@ body {
 
 svg {
   border: 1px solid #DEDEDE;
-  position: relative;
-  top: 30px;
+  top: 50px;
 }
 
 
@@ -66,16 +65,14 @@ span.textbox {
 #options {
     position: absolute;
     left: 125px;
-    top: 1185px;
+    top: 1230px;
     font-weight: bold;
     font-size: 18px;
-
-
 }
     
 #runButton {		
     position: absolute;		
-    top: 180px;
+    top: 195px;
     width: 100px;
     left: 25px;
     font-size: 18px;
@@ -84,7 +81,7 @@ span.textbox {
 .inputholder {
     position: absolute;
     left: 125px;
-    top: 1215px;
+    top: 1260px;
     font-size: 16px;
     border: 4px groove #aaa;
     padding: 20px;
