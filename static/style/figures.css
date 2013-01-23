@@ -1,0 +1,100 @@
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  position: relative;
+  width: 960px;
+}
+
+.axis text {
+  font: 16px sans-serif;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+    
+div.textArea {
+    width: 800px;
+    position: absolute;
+    left: 50px;
+    top: 1500px;
+    font-size: 16px;
+}
+    
+.bar {
+    fill: steelblue;
+    fill-opacity: .9;
+}
+
+.diff {
+    fill: none;
+    stroke: black;
+    stroke-width: 1.5px;
+}
+    
+.line {
+    fill: none;
+    stroke: green;
+    stroke-width: 1.5px;
+}
+
+.line2 {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+}
+
+.lineDoG {
+    fill: none;
+    stroke: black;
+    stroke-width: 1.5px;
+}
+    
+span.textbox {
+    font-size: 18px;
+}
+    
+#options {
+    position: absolute;
+    left: 125px;
+    top: 1185px;
+    font-weight: bold;
+    font-size: 18px;
+
+
+}
+    
+#runButton {		
+    position: absolute;		
+    top: 180px;
+    width: 100px;
+    left: 25px;
+    font-size: 18px;
+}
+
+.inputholder {
+    position: absolute;
+    left: 125px;
+    top: 1215px;
+    font-size: 16px;
+    border: 4px groove #aaa;
+    padding: 20px;
+}
+    
+#schematicEye {
+    position: absolute;
+    left: 180px;
+    top: 135px;
+    height: 200px;
+    width: 215px;
+}
+
+#baboon {
+    position: absolute;
+    left: 30px;
+    top: 190px;
+    height: 100px;
+    width: 150px;
+}
