@@ -62,7 +62,7 @@ ADMIN_MEDIA_PREFIX = '/static/admin/'
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
 
-STATIC_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'sitestatic')
+STATIC_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'static')
 
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
@@ -78,7 +78,6 @@ STATIC_URL = '/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'static'),
 )
 
 # List of finder classes that know how to find static files in

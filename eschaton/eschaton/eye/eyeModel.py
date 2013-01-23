@@ -1,6 +1,7 @@
 import os
 import shlex
 import numpy as np
+from NeitzModel import settings
 
 def rad2deg(radians):
     """convert radians to degrees
@@ -17,13 +18,9 @@ class SchematicEye(object):
         """
         
         """
-        if not OSLO_directory:
-            if os.path.basename(os.getcwd()) == 'eschaton':
-                p = './OSLO_MTF_DATA/'
-            else:
-                p = './eschaton/OSLO_MTF_DATA/'
-        else:
-            p = OSLO_directory
+
+        p = settings.STATIC_ROOT + '/OSLO_MTF_DATA/'
+
         self.loadOSLOData(p)
 
         
