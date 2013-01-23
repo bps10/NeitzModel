@@ -10,7 +10,7 @@
 // dimensions //
 var margin = {top: 70, right: 20, bottom: 30, left: 40},
     width = 900 - margin.left - margin.right,
-    height = 1500 - margin.top - margin.bottom,
+    height = 1470 - margin.top - margin.bottom,
     xaxisWidth = 350, yaxisWidth = 250;
 
 
@@ -186,7 +186,7 @@ var svg = d3.select("body").append("svg")
     
     svg.append("g")
     .attr("class", "x axis")
-    .attr("transform", "translate(450,250)")
+    .attr("transform", "translate(470,250)")
     .call(xAxis)
     .append("text")
     .attr("y", 50)
@@ -197,7 +197,7 @@ var svg = d3.select("body").append("svg")
 
     svg.append("g")
     .attr("class", "y axis")
-    .attr("transform", "translate(440,-10)")
+    .attr("transform", "translate(460,-10)")
     .call(yAxis)
     .append("text")
     .attr("transform", "rotate(-90)")
@@ -208,26 +208,26 @@ var svg = d3.select("body").append("svg")
     // figure 1 lines //
     svg.append("path")
     .datum(dataDif)
-    .attr("transform", "translate(450,-10)")
+    .attr("transform", "translate(470,-10)")
     .attr("class", "diff")
     .attr("d", line);
     
     svg.append("path")
     .datum(data)
-    .attr("transform", "translate(450,-10)")
+    .attr("transform", "translate(470,-10)")
     .attr("class", "line")
     .attr("d", line);
 
     svg.append("path")
     .datum(data2)
-    .attr("transform", "translate(450,-10)")
+    .attr("transform", "translate(470,-10)")
     .attr("class", "line2")
     .attr("d", line);
     
     // figure 2 //
     svg.append("g")
     .attr("class", "x axis")
-    .attr("transform", "translate(450,600)")
+    .attr("transform", "translate(470,600)")
     .call(xAxis2)    
     .append("text")
     .attr("y", 50)
@@ -238,7 +238,7 @@ var svg = d3.select("body").append("svg")
 
     svg.append("g")
     .attr("class", "y axis")
-    .attr("transform", "translate(440,340)")
+    .attr("transform", "translate(460,340)")
     .call(yAxis2)
     .append("text")
     .attr("transform", "rotate(-90)")
@@ -249,7 +249,7 @@ var svg = d3.select("body").append("svg")
     // figure 3 //
     svg.append("g")
     .attr("class", "x axis")
-    .attr("transform", "translate(450,950)")
+    .attr("transform", "translate(470,950)")
     .call(xAxis3)
     .append("text")
     .attr("y", 50)
@@ -260,7 +260,7 @@ var svg = d3.select("body").append("svg")
 
     svg.append("g")
     .attr("class", "y axis")
-    .attr("transform", "translate(440,690)")
+    .attr("transform", "translate(460,690)")
     .call(yAxis3)
     .append("text")
     .attr("transform", "rotate(-90)")
@@ -270,14 +270,14 @@ var svg = d3.select("body").append("svg")
 	
     svg.append("path")
     .datum(dataFFT)
-    .attr("transform", "translate(450,690)")
+    .attr("transform", "translate(470,690)")
     .attr("class", "lineDoG")
     .attr("d", lineFFT);
 
     // figure 4 //
     svg.append("g")
     .attr("class", "x axis")
-    .attr("transform", "translate(450,1300)")
+    .attr("transform", "translate(470,1300)")
     .call(xAxis4)    
     .append("text")
     .attr("y", 50)
@@ -288,7 +288,7 @@ var svg = d3.select("body").append("svg")
 
     svg.append("g")
     .attr("class", "y axis")
-    .attr("transform", "translate(440,1040)")
+    .attr("transform", "translate(460,1040)")
     .call(yAxis4)
     .append("text")
     .attr("transform", "rotate(-90)")
@@ -298,7 +298,7 @@ var svg = d3.select("body").append("svg")
 
     svg.append("g")
     .attr("class", "x axis")
-    .attr("transform", "translate(30,600)")
+    .attr("transform", "translate(40,600)")
     .call(xAxis5)    
     .append("text")
     .attr("y", 50)
@@ -309,7 +309,7 @@ var svg = d3.select("body").append("svg")
 
     svg.append("g")
     .attr("class", "y axis")
-    .attr("transform", "translate(20,340)")
+    .attr("transform", "translate(40,340)")
     .call(yAxis5)
     .append("text")
     .attr("transform", "rotate(-90)")
@@ -320,7 +320,7 @@ var svg = d3.select("body").append("svg")
     // loc7, fig6 //	
     svg.append("g")
     .attr("class", "x axis")
-    .attr("transform", "translate(30,950)")
+    .attr("transform", "translate(40,950)")
     .call(xAxis6)    
     .append("text")
     .attr("y", 50)
@@ -331,7 +331,7 @@ var svg = d3.select("body").append("svg")
 
     svg.append("g")
     .attr("class", "y axis")
-    .attr("transform", "translate(20,690)")
+    .attr("transform", "translate(30,690)")
     .call(yAxis6)
     .append("text")
     .attr("transform", "rotate(-90)")
@@ -341,7 +341,7 @@ var svg = d3.select("body").append("svg")
 
     svg.append("path")
     .datum(dataDoG)
-    .attr("transform", "translate(30,690)")
+    .attr("transform", "translate(40,690)")
     .attr("class", "lineDoG")
     .attr("d", lineDoG);
 
