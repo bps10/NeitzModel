@@ -86,12 +86,12 @@ var yAxis3 = d3.svg.axis()
 
 var xAxis4 = d3.svg.axis()
     .scale(x4)
-    .ticks(5)
+    .ticks(2)
     .orient("bottom");
 
 var yAxis4 = d3.svg.axis()
     .scale(y4)
-    .ticks(5)
+    .ticks(2)
     .orient("left");
 
 var xAxis5 = d3.svg.axis()
@@ -120,9 +120,17 @@ var line = d3.svg.line()
 .x(function(d) { return x1(d.x); })
 .y(function(d) { return y1(d.y); });
 
+var line2 = d3.svg.line()
+.x(function(d) { return x2(d.x); })
+.y(function(d) { return y2(d.y); });
+
 var lineFFT = d3.svg.line()
 .x(function(d) { return x3(d.x); })
 .y(function(d) { return y3(d.y); });
+
+var line4 = d3.svg.line()
+.x(function(d) { return x4(d.x); })
+.y(function(d) { return y4(d.y); });
 
 var linePow = d3.svg.line()
 .x(function(d) { return x5(d.x); })
@@ -154,9 +162,15 @@ var dataDif = dataFormatter(dataDif);
     data = dataFormatter(dataOpt),
     data2 = dataFormatter(dataOptB),
     dataFFT = dataFormatter(DOG_fft),
-    dataPow = dataFormatter(powerLaw);
+    dataPow = dataFormatter(powerLaw),
+    retPowDiffract = dataFormatter(retPowDiffract),
+    retPowOpt1 = dataFormatter(retPowOpt1),
+    retPowOpt2 = dataFormatter(retPowOpt2),
+    conePowDiffract = dataFormatter(conePowDiffract),
+    conePowOpt1 = dataFormatter(conePowOpt1),
+    conePowOpt2 = dataFormatter(conePowOpt2);
 
-//console.log(powerLaw);
+//console.log(retPowDiffract);
 
 var dataDoG = dogFormatter(DOG_xvals,DOG);
     
@@ -171,14 +185,14 @@ var svg = d3.select("body").append("svg")
     x1.domain(d3.extent(data, function(d) { return d.x; }));
     y1.domain(d3.extent(data, function(d) { return d.y; }));
 
-    x2.domain([Math.pow(10,2),Math.pow(10,6.6)]);
-    y2.domain([0,25]);
+    x2.domain(d3.extent(retPowDiffract, function(d) { return d.x; }));
+    y2.domain([Math.pow(10,-5), Math.pow(10,0)]);
 
     x3.domain(d3.extent(dataFFT, function(d) { return d.x; }));
-    y3.domain(d3.extent(dataFFT, function(d) { return d.y; }));
+    y3.domain([Math.pow(10,-5), Math.pow(10,0)]);
 
-    x4.domain([Math.pow(10,2),Math.pow(10,6.6)]);
-    y4.domain([0,25]);
+    x4.domain(d3.extent(conePowDiffract, function(d) { return d.x; }));
+    y4.domain([Math.pow(10,-6), Math.pow(10,-1)]);
 
     x5.domain(d3.extent(dataPow, function(d) { return d.x; }));
     y5.domain(d3.extent(dataPow, function(d) { return d.y; }));
@@ -236,7 +250,17 @@ var svg = d3.select("body").append("svg")
     .style("font-size","16px")
     .call(d3.legend);
 
+
     // figure 2 //
+
+    svg.append("svg:clipPath")
+    .attr("id", "clipper")
+    .append("svg:rect")
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("width", xaxisWidth)
+    .attr("height", yaxisWidth);
+
     svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(470,600)")
@@ -254,11 +278,33 @@ var svg = d3.select("body").append("svg")
     .call(yAxis2)
     .append("text")
     .attr("transform", "rotate(-90)")
-    .attr("y", -40)
+    .attr("y", -50)
     .attr("x", -150)
     .text("density");
-    
+
+    svg.append("path")
+    .datum(retPowDiffract)
+    .attr("transform", "translate(470,340)")
+    .attr("clip-path", "url(#clipper)")
+    .attr("class", "diff")
+    .attr("d", line2);
+
+    svg.append("path")
+    .datum(retPowOpt1)
+    .attr("transform", "translate(470,340)")
+    .attr("clip-path", "url(#clipper)")
+    .attr("class", "line")
+    .attr("d", line2);
+
+    svg.append("path")
+    .datum(retPowOpt2)
+    .attr("transform", "translate(470,340)")
+    .attr("clip-path", "url(#clipper)")
+    .attr("class", "line2")
+    .attr("d", line2);
+
     // figure 3 //
+
     svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(470,950)")
@@ -276,17 +322,19 @@ var svg = d3.select("body").append("svg")
     .call(yAxis3)
     .append("text")
     .attr("transform", "rotate(-90)")
-    .attr("y", -40)
+    .attr("y", -50)
     .attr("x", -150)
     .text("density");
 	
     svg.append("path")
     .datum(dataFFT)
     .attr("transform", "translate(470,690)")
+    .attr("clip-path", "url(#clipper)")
     .attr("class", "lineDoG")
     .attr("d", lineFFT);
 
     // figure 4 //
+
     svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(470,1300)")
@@ -304,9 +352,31 @@ var svg = d3.select("body").append("svg")
     .call(yAxis4)
     .append("text")
     .attr("transform", "rotate(-90)")
-    .attr("y", -40)
+    .attr("y", -50)
     .attr("x", -150)
     .text("density");
+
+    svg.append("path")
+    .datum(conePowDiffract)
+    .attr("transform", "translate(470,1040)")
+    .attr("clip-path", "url(#clipper)")
+    .attr("class", "diff")
+    .attr("d", line4);
+
+    svg.append("path")
+    .datum(conePowOpt1)
+    .attr("transform", "translate(470,1040)")
+    .attr("clip-path", "url(#clipper)")
+    .attr("class", "line")
+    .attr("d", line4);
+
+    svg.append("path")
+    .datum(conePowOpt2)
+    .attr("transform", "translate(470,1040)")
+    .attr("clip-path", "url(#clipper)")
+    .attr("class", "line2")
+    .attr("d", line4);
+
 
     // loc 6, figure 5 //
     svg.append("g")
@@ -326,7 +396,7 @@ var svg = d3.select("body").append("svg")
     .call(yAxis5)
     .append("text")
     .attr("transform", "rotate(-90)")
-    .attr("y", -40)
+    .attr("y", -50)
     .attr("x", -150)
     .text("density");
 
@@ -355,7 +425,7 @@ var svg = d3.select("body").append("svg")
     .call(yAxis6)
     .append("text")
     .attr("transform", "rotate(-90)")
-    .attr("y", -40)
+    .attr("y", -50)
     .attr("x", -150)
     .text("amplitude");
 
@@ -372,7 +442,6 @@ var svg = d3.select("body").append("svg")
 	d3.select("#coneInput").on("change", changeCone);
     d3.select("#opticSetting1").on("change",changeOpt1);
     d3.select("#opticSetting2").on("change",changeOpt2);
-    //d3.select("#runButton").on("click", update);
     
     
     var Opt1 = ['offAxis','40deg'],
