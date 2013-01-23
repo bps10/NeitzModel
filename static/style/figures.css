@@ -73,7 +73,7 @@ span.textbox {
     
 #runButton {		
     position: absolute;		
-    top: 195px;
+    top: 215px;
     width: 100px;
     left: 25px;
     font-size: 18px;
@@ -103,6 +103,12 @@ span.textbox {
     height: 100px;
     width: 150px;
 }
+
+#powLaw {
+    position: absolute;
+    top: 550px;
+    left: 225px;
+    font-size: 16px;
 
 .legend {
     position: fixed;

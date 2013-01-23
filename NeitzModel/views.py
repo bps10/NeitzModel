@@ -28,8 +28,7 @@ opticsDiff = getMTF('onAxis','diffract')
 
 
 # image, powerlaw:
-def getPowerlaw(exponent=2):
-    xlen = len(getMTF('onAxis','1m'))
+def getPowerlaw(xlen=60,exponent=2):
     return powerlaw(xlen, exponent)
 
 # processing:
@@ -46,13 +45,17 @@ def index(request):
     t = loader.get_template('index.html')
     
     if request.method == 'GET':
-        powLaw = getPowerlaw()
+        # power law and MTFs
+        power = 2.0
+        coneInput = 2.0
         MTF_A = getMTF('onAxis','1m')
         MTF_B = getMTF('onAxis','20ft')
+        powLaw = getPowerlaw(power)
+
         # compute stats at retina:
-        retPowDiffract = arrayMultiply(opticsDiff[1:],getPowerlaw()[1:])
-        retPowOpt1 = arrayMultiply(MTF_A[1:],getPowerlaw()[1:])
-        retPowOpt2 = arrayMultiply(MTF_B[1:],getPowerlaw()[1:])
+        retPowDiffract = arrayMultiply(opticsDiff[1:],getPowerlaw())
+        retPowOpt1 = arrayMultiply(MTF_A[1:],getPowerlaw())
+        retPowOpt2 = arrayMultiply(MTF_B[1:],getPowerlaw())
         # compute cone activity:
         conePowDiffract = arrayMultiply(retPowDiffract[1:],DOG_fft)
         conePowOpt1 = arrayMultiply(retPowOpt1[1:],DOG_fft)
@@ -62,6 +65,8 @@ def index(request):
                            {'opticDict':schemEye,
                            'optic1': 'farPeriph : 40deg',
                            'optic2': 'farPeriph : 20deg',
+                           'powerOpt': power,
+                           'coneOpt': coneInput,
                            'MTF_Dif':opticsDiff,
                            'MTF_A': MTF_A,
                            'MTF_B': MTF_B,
@@ -78,21 +83,23 @@ def index(request):
 
     if request.method == 'POST':
         try:
+            # get and format form input:
+            power = float(request.POST['powerInput'])
             coneInput = request.POST['coneInput']
             optic1 = request.POST['optic1']
             optic1 = formatPost(optic1)
             optic2 = request.POST['optic2']
             optic2 = formatPost(optic2)
-            # powInput
             
+            # power law and MTFs
             MTF_A = getMTF(optic1[0],optic1[1])
             MTF_B = getMTF(optic2[0],optic2[1])
+            powLaw = getPowerlaw(exponent = power)
             
-            powLaw = getPowerlaw()
             # compute stats at retina:
-            retPowDiffract = arrayMultiply(opticsDiff[1:],getPowerlaw()[1:])
-            retPowOpt1 = arrayMultiply(MTF_A[1:],getPowerlaw()[1:])
-            retPowOpt2 = arrayMultiply(MTF_B[1:],getPowerlaw()[1:])
+            retPowDiffract = arrayMultiply(opticsDiff[1:],getPowerlaw(60,power))
+            retPowOpt1 = arrayMultiply(MTF_A[1:],getPowerlaw(60,power))
+            retPowOpt2 = arrayMultiply(MTF_B[1:],getPowerlaw(60,power))
             # compute cone activity:
             conePowDiffract = arrayMultiply(retPowDiffract[1:],DOG_fft)
             conePowOpt1 = arrayMultiply(retPowOpt1[1:],DOG_fft)
@@ -102,6 +109,8 @@ def index(request):
                                {'opticDict':schemEye,
                                'optic1': request.POST['optic1'],
                                'optic2': request.POST['optic2'],
+                               'powerOpt': power,
+                               'coneOpt': coneInput,
                                'MTF_Dif':opticsDiff,
                                'MTF_A': MTF_A,
                                'MTF_B': MTF_B,

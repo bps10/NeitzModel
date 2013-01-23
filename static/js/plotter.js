@@ -407,6 +407,10 @@ var svg = d3.select("body").append("svg")
     .attr("data-legend",opt2)
     .attr("d", linePow);
 
+    d3.select("body").append("text")
+    .attr("id", "powLaw")
+    .text("power law, n = " + power);
+
     // loc7, fig6 //
     svg.append("g")
     .attr("class", "x axis")
@@ -437,8 +441,9 @@ var svg = d3.select("body").append("svg")
 
     // loc8, options //
 
+    
                   
-
+    d3.select("#powerInput").on("change", changePower);
 	d3.select("#coneInput").on("change", changeCone);
     d3.select("#opticSetting1").on("change",changeOpt1);
     d3.select("#opticSetting2").on("change",changeOpt2);
@@ -471,8 +476,19 @@ var svg = d3.select("body").append("svg")
     };
 
 
-    
-	
+    function changePower() {
+        power = this.value;
+        
+        d3.select("#power_val").remove();
+        
+        d3.select("#power_text").append("span")
+        .attr("id", "power_val")
+        .style("color", "black")
+        .text(power);
+        
+    };
+
+
 
 
 
