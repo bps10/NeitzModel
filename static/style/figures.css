@@ -102,3 +102,7 @@ span.textbox {
     height: 100px;
     width: 150px;
 }
+
+.legend {
+    position: fixed;
+}
