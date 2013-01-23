@@ -226,7 +226,7 @@ var svg = d3.select("body").append("svg")
     .attr("data-legend",opt2)
     .attr("d", line);
 
-    legend = svg.append("g")
+    svg.append("g")
     .attr("class","legend")
     .attr("transform","translate(700,20)")
     .style("font-size","16px")

@@ -6,7 +6,8 @@ body {
 
 svg {
   border: 1px solid #DEDEDE;
-  top: 50px;
+  margin: 1em auto 8em auto;
+  top: 10px;
 }
 
 
