@@ -61,6 +61,11 @@ def index(request):
         conePowOpt1 = arrayMultiply(retPowOpt1[1:],DOG_fft)
         conePowOpt2 = arrayMultiply(retPowOpt2[1:],DOG_fft)
         
+        # integrate activity:
+        coneActivity = [round(sum(conePowDiffract),4),
+                        round(sum(conePowOpt1),4),
+                        round(sum(conePowOpt2),4)]
+        
         c = RequestContext(request,
                            {'opticDict':schemEye,
                            'optic1': 'onAxis :1m',
@@ -79,7 +84,8 @@ def index(request):
                            'retPowOpt2': retPowOpt2,
                            'conePowDiffract': conePowDiffract,
                            'conePowOpt1': conePowOpt1,
-                           'conePowOpt2': conePowOpt2,})
+                           'conePowOpt2': conePowOpt2,
+                           'coneActivity': coneActivity,})
 
     if request.method == 'POST':
         try:
@@ -104,7 +110,12 @@ def index(request):
             conePowDiffract = arrayMultiply(retPowDiffract[1:],DOG_fft)
             conePowOpt1 = arrayMultiply(retPowOpt1[1:],DOG_fft)
             conePowOpt2 = arrayMultiply(retPowOpt2[1:],DOG_fft)
-            
+
+            # integrate activity:
+            coneActivity = [round(sum(conePowDiffract),4),
+                            round(sum(conePowOpt1),4),
+                            round(sum(conePowOpt2),4)]
+        
             c = RequestContext(request,
                                {'opticDict':schemEye,
                                'optic1': request.POST['optic1'],
@@ -123,7 +134,8 @@ def index(request):
                                'retPowOpt2': retPowOpt2,
                                'conePowDiffract': conePowDiffract,
                                'conePowOpt1': conePowOpt1,
-                               'conePowOpt2': conePowOpt2,})
+                               'conePowOpt2': conePowOpt2,
+                               'coneActivity': coneActivity,})
 
         except:
             print 'nope'

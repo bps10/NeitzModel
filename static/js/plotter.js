@@ -140,9 +140,7 @@ var lineDoG = d3.svg.line()
 .x(function(d) { return x6(d.x); })
 .y(function(d) { return y6(d.y); });
 
-var opt1 = ['onAxis : 1m'],
-opt2 = ['onAxis : 20ft'],
-spacing=2,
+var spacing=2,
 updateEvent = {};
 
 
