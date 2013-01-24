@@ -24,7 +24,28 @@
     
     <img src="{{ STATIC_URL }}images/SchematicEye.jpg" id="schematicEye" />
     <img src="{{ STATIC_URL }}images/baboon.jpg" id="baboon" />
-     
+
+
+    <script>
+        
+        var dataDif = {{ MTF_Dif }},
+        dataOpt = {{ MTF_A }},
+        dataOptB = {{ MTF_B }},
+        DOG = {{ DOG }},
+        DOG_xvals = {{ DOG_xvals }},
+        DOG_fft = {{ DOG_fft }},
+        opt1 = "{{ optic1 }}",
+        opt2 = "{{ optic2 }}",
+        power = {{ powerOpt }},
+        powerLaw = {{ powerLaw }},
+        retPowDiffract = {{ retPowDiffract }},
+        retPowOpt1 = {{ retPowOpt1 }},
+        retPowOpt2 = {{ retPowOpt2 }},
+        conePowDiffract = {{ conePowDiffract }},
+        conePowOpt1 = {{ conePowOpt1 }}
+        conePowOpt2 = {{ conePowOpt2 }};
+        
+    </script>
     
     <span class='textbox' id='options'>model parameters: </span>
     
@@ -54,54 +75,32 @@
             <select id='opticSetting1' name="optic1" value="{{ optic1 }}">
             {% for key,value in opticDict.iteritems %}
                 {% if key != 'freqs' %}
-                    {% for optic in value %}
-                        {% if "{{ key }} : {{ optic }}" == "{{ optic1 }}" %}
-                            <option selected> {{ key }} : {{ optic }} </option>
-                        {% else %}
-                            <option> {{ key }} : {{ optic }} </option>
-                        {% endif %}
+                {% for optic in value %}
+                    <option {% if "{{ key }} : {{ optic }}" == opt1 %} selected="selected" {% endif %}> {{ key }} : {{ optic }}
                     {% endfor %}
                 {% endif %}
             {% endfor %}
             </select>
                 
             <br>
-                
+            
             <select id='opticSetting2' name="optic2" value="{{ optic2 }}">
-                {% for key,value in opticDict.iteritems %}
-                    {% if key != 'freqs' %}
-                        {% for optic in value %}
-                            <option> {{ key }} : {{ optic }} </option>
-                        {% endfor %}
-                    {% endif %}
-                {% endfor %}
+            {% for key,value in opticDict.iteritems %}
+                {% if key != 'freqs' %}
+                    {% for optic in value %}
+                        <option {% if "{{ key }} : {{ optic }}" == opt2 %} selected="selected" {% endif %}> {{ key }} : {{ optic }}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
             </select>
+                
+            <br>
+            <br>
                 
             <input type="submit" value="update" id="runButton">
  
         </form>
     </div>
-    
-<script>
-    
-    var dataDif = {{ MTF_Dif }},
-        dataOpt = {{ MTF_A }},
-        dataOptB = {{ MTF_B }},
-        DOG = {{ DOG }},
-        DOG_xvals = {{ DOG_xvals }},
-        DOG_fft = {{ DOG_fft }},
-        opt1 = "{{ optic1 }}",
-        opt2 = "{{ optic2 }}",
-        power = {{ powerOpt }},
-        powerLaw = {{ powerLaw }},
-        retPowDiffract = {{ retPowDiffract }},
-        retPowOpt1 = {{ retPowOpt1 }},
-        retPowOpt2 = {{ retPowOpt2 }},
-        conePowDiffract = {{ conePowDiffract }},
-        conePowOpt1 = {{ conePowOpt1 }}
-        conePowOpt2 = {{ conePowOpt2 }};
-    
-</script>
     
 <script src="{{ STATIC_URL }}js/plotter.js" type='text/javascript'></script>
     

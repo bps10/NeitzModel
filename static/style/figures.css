@@ -71,13 +71,7 @@ span.textbox {
     font-size: 18px;
 }
     
-#runButton {		
-    position: absolute;		
-    top: 215px;
-    width: 100px;
-    left: 25px;
-    font-size: 18px;
-}
+
 
 .inputholder {
     position: absolute;
@@ -102,6 +96,10 @@ span.textbox {
     top: 225px;
     height: 100px;
     width: 150px;
+}
+#runButton {           
+    width: 130px;
+    font-size: 18px;
 }
 
 #powLaw {

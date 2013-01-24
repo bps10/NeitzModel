@@ -140,11 +140,16 @@ var lineDoG = d3.svg.line()
 .x(function(d) { return x6(d.x); })
 .y(function(d) { return y6(d.y); });
 
+var opt1 = ['onAxis : 1m'],
+opt2 = ['onAxis : 20ft'],
+spacing=2,
+updateEvent = {};
 
-function dataFormatter(input) {
+
+function dataFormatter(input,xstart) {
     var dat = []
     for (var i=0; i<input.length; i++) {
-        dat.push({"x": i+1, "y": input[i]});
+        dat.push({"x": i+xstart, "y": input[i]});
         };
     return dat
 };
@@ -158,17 +163,17 @@ function dogFormatter(xvals, DOG) {
 };
 
 
-var dataDif = dataFormatter(dataDif);
-    data = dataFormatter(dataOpt),
-    data2 = dataFormatter(dataOptB),
-    dataFFT = dataFormatter(DOG_fft),
-    dataPow = dataFormatter(powerLaw),
-    retPowDiffract = dataFormatter(retPowDiffract),
-    retPowOpt1 = dataFormatter(retPowOpt1),
-    retPowOpt2 = dataFormatter(retPowOpt2),
-    conePowDiffract = dataFormatter(conePowDiffract),
-    conePowOpt1 = dataFormatter(conePowOpt1),
-    conePowOpt2 = dataFormatter(conePowOpt2);
+var dataDif = dataFormatter(dataDif,0);
+    data = dataFormatter(dataOpt,0),
+    data2 = dataFormatter(dataOptB,0),
+    dataFFT = dataFormatter(DOG_fft,1),
+    dataPow = dataFormatter(powerLaw,1),
+    retPowDiffract = dataFormatter(retPowDiffract,1),
+    retPowOpt1 = dataFormatter(retPowOpt1,1),
+    retPowOpt2 = dataFormatter(retPowOpt2,1),
+    conePowDiffract = dataFormatter(conePowDiffract,1),
+    conePowOpt1 = dataFormatter(conePowOpt1,1),
+    conePowOpt2 = dataFormatter(conePowOpt2,1);
 
 //console.log(retPowDiffract);
 
@@ -404,7 +409,6 @@ var svg = d3.select("body").append("svg")
     .datum(dataPow)
     .attr("transform", "translate(40, 340)")
     .attr("class", "lineDoG")
-    .attr("data-legend",opt2)
     .attr("d", linePow);
 
     d3.select("body").append("text")
@@ -449,17 +453,12 @@ var svg = d3.select("body").append("svg")
     d3.select("#opticSetting2").on("change",changeOpt2);
     
     
-    var Opt1 = ['offAxis','40deg'],
-        Opt2 = ['offAxis','20deg'],
-        spacing=2,
-        updateEvent = {};
-    
     function changeOpt1() {
-        Opt1 = this.value.split(" : ")
+        opt1 = this.value.split(" : ")
     }
     
     function changeOpt2() {
-        Opt2 = this.value.split(" : ")
+        opt2 = this.value.split(" : ")
     }
 
     function changeCone() {

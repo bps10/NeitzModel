@@ -63,8 +63,8 @@ def index(request):
         
         c = RequestContext(request,
                            {'opticDict':schemEye,
-                           'optic1': 'farPeriph : 40deg',
-                           'optic2': 'farPeriph : 20deg',
+                           'optic1': 'onAxis :1m',
+                           'optic2': 'onAxis : 20ft',
                            'powerOpt': power,
                            'coneOpt': coneInput,
                            'MTF_Dif':opticsDiff,
