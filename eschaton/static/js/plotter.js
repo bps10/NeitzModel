@@ -18,37 +18,37 @@ var margin = {top: 70, right: 20, bottom: 30, left: 40},
 // scales //
 var x1 = d3.scale.linear()
     .range([0, xaxisWidth]);
-    
+
 var y1 = d3.scale.linear()
     .range([yaxisWidth, 0]);
-    
+
 var x2 = d3.scale.log()
     .range([0, xaxisWidth]);
-    
+
 var y2 = d3.scale.log()
     .range([yaxisWidth, 0]);
 
 var x3 = d3.scale.log()
     .range([0, xaxisWidth]);
-    
+
 var y3 = d3.scale.log()
     .range([yaxisWidth, 0]);
 
 var x4 = d3.scale.log()
     .range([0, xaxisWidth]);
-    
+
 var y4 = d3.scale.log()
     .range([yaxisWidth, 0]);
 	
 var x5 = d3.scale.log()
     .range([0, xaxisWidth]);
-    
+
 var y5 = d3.scale.log()
     .range([yaxisWidth, 0]);
 
 var x6 = d3.scale.linear()
     .range([0, xaxisWidth]);
-    
+
 var y6 = d3.scale.linear()
     .range([yaxisWidth, 0]);
 
@@ -63,7 +63,7 @@ var yAxis = d3.svg.axis()
     .scale(y1)
     .ticks(5)
     .orient("left");
-	
+
 var xAxis2 = d3.svg.axis()
     .scale(x2)
     .ticks(2)
@@ -112,7 +112,7 @@ var xAxis6 = d3.svg.axis()
 var yAxis6 = d3.svg.axis()
     .scale(y6)
     .ticks(5)
-    .orient("left");	
+    .orient("left");
 
 
 
@@ -176,9 +176,9 @@ var dataDif = dataFormatter(dataDif,0);
 //console.log(retPowDiffract);
 
 var dataDoG = dogFormatter(DOG_xvals,DOG);
-    
 
-    
+
+
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -202,9 +202,9 @@ var svg = d3.select("body").append("svg")
 
     x6.domain(d3.extent(dataDoG, function(d) { return d.x; }));
     y6.domain(d3.extent(dataDoG, function(d) { return d.y; }));
-    
-    // figure 1 lines //	
-    
+
+    // figure 1 lines //
+
     svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(470,250)")
@@ -214,7 +214,7 @@ var svg = d3.select("body").append("svg")
     .attr("x", 75)
     .style("text-anchor", "beginning")
     .text("spatial frequency (cycles/deg)");
-    
+
 
     svg.append("g")
     .attr("class", "y axis")
@@ -232,7 +232,7 @@ var svg = d3.select("body").append("svg")
     .attr("class", "diff")
     .attr("data-legend","diffraction")
     .attr("d", line);
-    
+
     svg.append("path")
     .datum(data)
     .attr("transform", "translate(470,-10)")
@@ -267,13 +267,13 @@ var svg = d3.select("body").append("svg")
     svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(470,600)")
-    .call(xAxis2)    
+    .call(xAxis2)
     .append("text")
     .attr("y", 50)
     .attr("x", 75)
     .style("text-anchor", "beginning")
     .text("spatial frequency (cycles/deg)");
-    
+
 
     svg.append("g")
     .attr("class", "y axis")
@@ -317,7 +317,7 @@ var svg = d3.select("body").append("svg")
     .attr("x", 75)
     .style("text-anchor", "beginning")
     .text("spatial frequency (cycles/deg)");
-    
+
 
     svg.append("g")
     .attr("class", "y axis")
@@ -341,13 +341,13 @@ var svg = d3.select("body").append("svg")
     svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(470,1300)")
-    .call(xAxis4)    
+    .call(xAxis4)
     .append("text")
     .attr("y", 50)
     .attr("x", 75)
     .style("text-anchor", "beginning")
     .text("spatial frequency (cycles/degree)");
-    
+
 
     svg.append("g")
     .attr("class", "y axis")
@@ -385,13 +385,13 @@ var svg = d3.select("body").append("svg")
     svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(40,600)")
-    .call(xAxis5)    
+    .call(xAxis5)
     .append("text")
     .attr("y", 50)
     .attr("x", 65)
     .style("text-anchor", "beginning")
     .text("spatial frequency (cycles/degree)");
-    
+
 
     svg.append("g")
     .attr("class", "y axis")
@@ -417,13 +417,13 @@ var svg = d3.select("body").append("svg")
     svg.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(40,950)")
-    .call(xAxis6)    
+    .call(xAxis6)
     .append("text")
     .attr("y", 50)
     .attr("x", 115)
     .style("text-anchor", "beginning")
     .text("distance (arcmin)");
-    
+
 
     svg.append("g")
     .attr("class", "y axis")
@@ -443,49 +443,65 @@ var svg = d3.select("body").append("svg")
 
     // loc8, options //
 
-    
-                  
+
+
     d3.select("#powerInput").on("change", changePower);
-	d3.select("#coneInput").on("change", changeCone);
+    d3.select("#coneInput").on("change", changeCone);
     d3.select("#opticSetting1").on("change",changeOpt1);
     d3.select("#opticSetting2").on("change",changeOpt2);
-    
-    
+
+
     function changeOpt1() {
-        opt1 = this.value.split(" : ")
+        opt1 = this.value.split(" : ");
+
     }
-    
+
     function changeOpt2() {
-        opt2 = this.value.split(" : ")
+        opt2 = this.value.split(" : ");
     }
 
     function changeCone() {
         spacing = this.value;
         console.log(spacing);
-        
+
         d3.select("#cone_val").remove();
-        
+
         d3.select("#cone_text").append("span")
         .attr("id", "cone_val")
         .style("color", "black")
         .text(spacing + " arcmin");
-        
+
     };
 
 
     function changePower() {
         power = this.value;
-        
+
         d3.select("#power_val").remove();
-        
+
         d3.select("#power_text").append("span")
         .attr("id", "power_val")
         .style("color", "black")
         .text(power);
-        
+
     };
 
+// update select boxes with selected index
 
+selected("opticSetting1", opt1);
+selected("opticSetting2", opt2);
 
+function selected(selectID, optInfo) {
 
+var selectHandle=document.getElementById(selectID),
+    x=document.getElementById(selectID).selectedIndex,
+    y=document.getElementById(selectID).options;
 
+for(var x=0;x<y.length; x++) {
+
+    if(optInfo==y[x].text){
+        selectHandle.selectedIndex = x;
+    };
+}
+
+}

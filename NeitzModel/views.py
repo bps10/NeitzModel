@@ -1,13 +1,14 @@
 from django.template import RequestContext, loader
 from django.http import HttpResponse
-from django.utils import simplejson
+#from django.utils import simplejson
 
 # eschaton imports
 from eschaton.eschaton import eye, cones
 from eschaton.eschaton.scene import powerlaw
 
 schemEye = eye.eyeModel.SchematicEye().returnOSLOdata()
-coneDOG = cones.dogRFields.ConeReceptiveFields(schemEye['freqs']).returnReceptiveField()
+coneDOG = cones.dogRFields.ConeReceptiveFields(
+    schemEye['freqs']).returnReceptiveField()
 powerlaw = powerlaw.normPowerlaw
 
 # DoG receptive field:
@@ -16,24 +17,29 @@ DOG_xvals = coneDOG['xvals'].tolist()
 DOG_fft = coneDOG['RField']['fft']['periph'][:].tolist()
 
 
-
 # optics:
-def getMTF(axis,objDist):
+def getMTF(axis, objDist):
+
     return schemEye[axis][objDist][:].tolist()
 
+
 def formatPost(optic):
+
     return optic.split(" : ")
 
-opticsDiff = getMTF('onAxis','diffract')
+
+opticsDiff = getMTF('onAxis', 'diffract')
 
 
 # image, powerlaw:
-def getPowerlaw(xlen=60,exponent=2):
+def getPowerlaw(xlen=60, exponent=2):
+
     return powerlaw(xlen, exponent)
+
 
 # processing:
 def arrayMultiply(inputA, inputB):
-    
+
     output = []
     for i in range(len(inputA)):
         output.append(inputA[i] * inputB[i])
@@ -43,40 +49,40 @@ def arrayMultiply(inputA, inputB):
 # view
 def index(request):
     t = loader.get_template('index.html')
-    
+
     if request.method == 'GET':
         # power law and MTFs
-        power = 2.0
-        coneInput = 2.0
-        MTF_A = getMTF('onAxis','1m')
-        MTF_B = getMTF('onAxis','20ft')
+        power = 2
+        coneInput = 2
+        MTF_A = getMTF('onAxis', '1m')
+        MTF_B = getMTF('onAxis', '20ft')
         powLaw = getPowerlaw(power)
 
         # compute stats at retina:
-        retPowDiffract = arrayMultiply(opticsDiff[1:],getPowerlaw())
-        retPowOpt1 = arrayMultiply(MTF_A[1:],getPowerlaw())
-        retPowOpt2 = arrayMultiply(MTF_B[1:],getPowerlaw())
+        retPowDiffract = arrayMultiply(opticsDiff[1:], getPowerlaw())
+        retPowOpt1 = arrayMultiply(MTF_A[1:], getPowerlaw())
+        retPowOpt2 = arrayMultiply(MTF_B[1:], getPowerlaw())
         # compute cone activity:
-        conePowDiffract = arrayMultiply(retPowDiffract[1:],DOG_fft)
-        conePowOpt1 = arrayMultiply(retPowOpt1[1:],DOG_fft)
-        conePowOpt2 = arrayMultiply(retPowOpt2[1:],DOG_fft)
-        
+        conePowDiffract = arrayMultiply(retPowDiffract[1:], DOG_fft)
+        conePowOpt1 = arrayMultiply(retPowOpt1[1:], DOG_fft)
+        conePowOpt2 = arrayMultiply(retPowOpt2[1:], DOG_fft)
+
         # integrate activity:
-        coneActivity = [round(sum(conePowDiffract),4),
-                        round(sum(conePowOpt1),4),
-                        round(sum(conePowOpt2),4)]
-        
+        coneActivity = [round(sum(conePowDiffract), 4),
+                        round(sum(conePowOpt1), 4),
+                        round(sum(conePowOpt2), 4)]
+
         c = RequestContext(request,
-                           {'opticDict':schemEye,
-                           'optic1': 'onAxis :1m',
+                           {'opticDict': schemEye,
+                           'optic1': 'onAxis : 1m',
                            'optic2': 'onAxis : 20ft',
                            'powerOpt': power,
                            'coneOpt': coneInput,
-                           'MTF_Dif':opticsDiff,
+                           'MTF_Dif': opticsDiff,
                            'MTF_A': MTF_A,
                            'MTF_B': MTF_B,
                            'DOG': DOG,
-                           'DOG_xvals':DOG_xvals,
+                           'DOG_xvals': DOG_xvals,
                            'DOG_fft': DOG_fft,
                            'powerLaw': powLaw,
                            'retPowDiffract': retPowDiffract,
@@ -85,7 +91,7 @@ def index(request):
                            'conePowDiffract': conePowDiffract,
                            'conePowOpt1': conePowOpt1,
                            'conePowOpt2': conePowOpt2,
-                           'coneActivity': coneActivity,})
+                           'coneActivity': coneActivity, })
 
     if request.method == 'POST':
         try:
@@ -96,33 +102,34 @@ def index(request):
             optic1 = formatPost(optic1)
             optic2 = request.POST['optic2']
             optic2 = formatPost(optic2)
-            
+
             # power law and MTFs
-            MTF_A = getMTF(optic1[0],optic1[1])
-            MTF_B = getMTF(optic2[0],optic2[1])
-            powLaw = getPowerlaw(exponent = power)
-            
+            MTF_A = getMTF(optic1[0], optic1[1])
+            MTF_B = getMTF(optic2[0], optic2[1])
+            powLaw = getPowerlaw(exponent=power)
+
             # compute stats at retina:
-            retPowDiffract = arrayMultiply(opticsDiff[1:],getPowerlaw(60,power))
-            retPowOpt1 = arrayMultiply(MTF_A[1:],getPowerlaw(60,power))
-            retPowOpt2 = arrayMultiply(MTF_B[1:],getPowerlaw(60,power))
+            retPowDiffract = arrayMultiply(opticsDiff[1:],
+                 getPowerlaw(60, power))
+            retPowOpt1 = arrayMultiply(MTF_A[1:], getPowerlaw(60, power))
+            retPowOpt2 = arrayMultiply(MTF_B[1:], getPowerlaw(60, power))
             # compute cone activity:
-            conePowDiffract = arrayMultiply(retPowDiffract[1:],DOG_fft)
-            conePowOpt1 = arrayMultiply(retPowOpt1[1:],DOG_fft)
-            conePowOpt2 = arrayMultiply(retPowOpt2[1:],DOG_fft)
+            conePowDiffract = arrayMultiply(retPowDiffract[1:], DOG_fft)
+            conePowOpt1 = arrayMultiply(retPowOpt1[1:], DOG_fft)
+            conePowOpt2 = arrayMultiply(retPowOpt2[1:], DOG_fft)
 
             # integrate activity:
-            coneActivity = [round(sum(conePowDiffract),4),
-                            round(sum(conePowOpt1),4),
-                            round(sum(conePowOpt2),4)]
-        
+            coneActivity = [round(sum(conePowDiffract), 4),
+                            round(sum(conePowOpt1), 4),
+                            round(sum(conePowOpt2), 4)]
+
             c = RequestContext(request,
-                               {'opticDict':schemEye,
+                               {'opticDict': schemEye,
                                'optic1': request.POST['optic1'],
                                'optic2': request.POST['optic2'],
                                'powerOpt': power,
                                'coneOpt': coneInput,
-                               'MTF_Dif':opticsDiff,
+                               'MTF_Dif': opticsDiff,
                                'MTF_A': MTF_A,
                                'MTF_B': MTF_B,
                                'DOG': DOG,
@@ -135,7 +142,7 @@ def index(request):
                                'conePowDiffract': conePowDiffract,
                                'conePowOpt1': conePowOpt1,
                                'conePowOpt2': conePowOpt2,
-                               'coneActivity': coneActivity,})
+                               'coneActivity': coneActivity, })
 
         except:
             print 'nope'
