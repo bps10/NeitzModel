@@ -63,7 +63,7 @@ var yAxis = d3.svg.axis()
     .scale(y1)
     .ticks(5)
     .orient("left");
-	
+
 var xAxis2 = d3.svg.axis()
     .scale(x2)
     .ticks(2)
@@ -450,15 +450,13 @@ var svg = d3.select("body").append("svg")
     d3.select("#opticSetting1").on("change",changeOpt1);
     d3.select("#opticSetting2").on("change",changeOpt2);
 
-    console.log("hello");
 
     function changeOpt1() {
-        d3.select(opt1).attr("selected","selected");
         opt1 = this.value.split(" : ");
+
     }
 
     function changeOpt2() {
-        d3.select(opt2).attr("selected","selected");
         opt2 = this.value.split(" : ");
     }
 
@@ -488,7 +486,22 @@ var svg = d3.select("body").append("svg")
 
     };
 
+// update select boxes with selected index
 
+selected("opticSetting1", opt1);
+selected("opticSetting2", opt2);
 
+function selected(selectID, optInfo) {
 
+var selectHandle=document.getElementById(selectID),
+    x=document.getElementById(selectID).selectedIndex,
+    y=document.getElementById(selectID).options;
 
+for(var x=0;x<y.length; x++) {
+
+    if(optInfo==y[x].text){
+        selectHandle.selectedIndex = x;
+    };
+}
+
+}

@@ -2,7 +2,7 @@ from django.conf.urls import patterns, include, url
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
-from NeitzModel import settings
+#from NeitzModel import settings
 admin.autodiscover()
 
 urlpatterns = patterns('',
@@ -17,4 +17,5 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
 )
 
-urlpatterns += patterns('', url(r'^static/(.*)$', 'django.views.static.serve', {'document_root':settings.STATIC_ROOT}),)
+#urlpatterns += patterns('', url(r'^static/(.*)$', 'django.views.static.serve',
+#{'document_root':settings.STATIC_ROOT}),)
