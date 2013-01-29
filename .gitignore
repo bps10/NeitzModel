@@ -8,3 +8,4 @@ db.db
 .ebextensions/python.config
 *.log
 *.pot
+*.nja
