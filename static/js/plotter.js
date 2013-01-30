@@ -63,7 +63,7 @@ var yAxis = d3.svg.axis()
     .scale(y1)
     .ticks(5)
     .orient("left");
-	
+
 var xAxis2 = d3.svg.axis()
     .scale(x2)
     .ticks(2)
@@ -450,15 +450,13 @@ var svg = d3.select("body").append("svg")
     d3.select("#opticSetting1").on("change",changeOpt1);
     d3.select("#opticSetting2").on("change",changeOpt2);
 
-    console.log("hello");
 
     function changeOpt1() {
-        d3.select(opt1).attr("selected","selected");
         opt1 = this.value.split(" : ");
+
     }
 
     function changeOpt2() {
-        d3.select(opt2).attr("selected","selected");
         opt2 = this.value.split(" : ");
     }
 
@@ -487,8 +485,4 @@ var svg = d3.select("body").append("svg")
         .text(power);
 
     };
-
-
-
-
 
