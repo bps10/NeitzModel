@@ -122,7 +122,6 @@ def findSpacing(Xvals, cone_spacing=2.0):
             SD += 0.05
             dog = DoG(Xvals, SD, 5.0)
             dist = findDist(Xvals, dog)
-            print 'larger: ', dist
             i += 1
             if i == 99:
                 raise IOError('Sorry, cannot find DoG')
@@ -131,7 +130,6 @@ def findSpacing(Xvals, cone_spacing=2.0):
             SD -= 0.01
             dog = DoG(Xvals, SD, 5.0)
             dist = findDist(Xvals, dog)
-            print 'smaller: ', dist
             i += 1
             if i == 99:
                 raise IOError('Sorry, cannot find DoG')
