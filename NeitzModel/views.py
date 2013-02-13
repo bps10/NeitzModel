@@ -3,18 +3,21 @@ from django.http import HttpResponse
 #from django.utils import simplejson
 
 # eschaton imports
-from eschaton.eschaton import eye, cones
+from eschaton.eschaton import eye
+from eschaton.eschaton.cones import dogRFields as df
 from eschaton.eschaton.scene import powerlaw
 
 schemEye = eye.eyeModel.SchematicEye().returnOSLOdata()
-coneDOG = cones.dogRFields.ConeReceptiveFields(
-    schemEye['freqs']).returnReceptiveField()
 powerlaw = powerlaw.normPowerlaw
 
-# DoG receptive field:
-DOG = coneDOG['dog']['periph'].tolist()
-DOG_xvals = coneDOG['xvals'].tolist()
-DOG_fft = coneDOG['RField']['fft']['periph'][:].tolist()
+
+def getRField(freqs=schemEye['freqs'], cone_spacing=2.0):
+    coneDOG = df.genReceptiveFields(freqs, cone_spacing)
+    # DoG receptive field:
+    DOG = coneDOG['dog'].tolist()
+    DOG_xvals = coneDOG['xvals'].tolist()
+    DOG_fft = coneDOG['fft'][:].tolist()
+    return DOG, DOG_xvals, DOG_fft
 
 
 # optics:
@@ -63,6 +66,7 @@ def index(request):
         retPowOpt1 = arrayMultiply(MTF_A[1:], getPowerlaw())
         retPowOpt2 = arrayMultiply(MTF_B[1:], getPowerlaw())
         # compute cone activity:
+        DOG, DOG_xvals, DOG_fft = getRField(cone_spacing=2.0)
         conePowDiffract = arrayMultiply(retPowDiffract[1:], DOG_fft)
         conePowOpt1 = arrayMultiply(retPowOpt1[1:], DOG_fft)
         conePowOpt2 = arrayMultiply(retPowOpt2[1:], DOG_fft)
@@ -97,7 +101,8 @@ def index(request):
         try:
             # get and format form input:
             power = float(request.POST['powerInput'])
-            coneInput = request.POST['coneInput']
+            coneInput = float(request.POST['coneInput'])
+            print coneInput
             optic1 = request.POST['optic1']
             optic1 = formatPost(optic1)
             optic2 = request.POST['optic2']
@@ -114,6 +119,7 @@ def index(request):
             retPowOpt1 = arrayMultiply(MTF_A[1:], getPowerlaw(60, power))
             retPowOpt2 = arrayMultiply(MTF_B[1:], getPowerlaw(60, power))
             # compute cone activity:
+            DOG, DOG_xvals, DOG_fft = getRField(cone_spacing=coneInput)
             conePowDiffract = arrayMultiply(retPowDiffract[1:], DOG_fft)
             conePowOpt1 = arrayMultiply(retPowOpt1[1:], DOG_fft)
             conePowOpt2 = arrayMultiply(retPowOpt2[1:], DOG_fft)
