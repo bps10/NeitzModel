@@ -3,7 +3,6 @@ from __future__ import division
 import numpy as np
 
 from spectsens import spectsens
-import PlottingFun as pf
 
 from NeitzModel import settings
 ## todo:: Create a logging function.
@@ -244,6 +243,7 @@ class colorSpace(object):
         try:
             plt.__version__
         except NameError:
+            import PlottingFun as pf
             import matplotlib.pylab as plt
             
         self.genStockmanFilter()
@@ -273,6 +273,7 @@ class colorSpace(object):
         try:
             plt.__version__
         except NameError:
+            import PlottingFun as pf
             import matplotlib.pylab as plt
         
         fig = plt.figure()
@@ -293,6 +294,7 @@ class colorSpace(object):
         try:
             plt.show()
         except NameError:
+            import PlottingFun as pf
             import matplotlib.pylab as plt 
             
         fig = plt.figure()
@@ -319,6 +321,7 @@ class colorSpace(object):
         try:
             plt.__version__
         except NameError:
+            import PlottingFun as pf
             import matplotlib.pylab as plt
             
         fig = plt.figure()
@@ -341,6 +344,7 @@ class colorSpace(object):
         try:
             plt.__version__
         except NameError:
+            import PlottingFun as pf
             import matplotlib.pylab as plt
             
         fig = plt.figure()
@@ -461,7 +465,7 @@ class colorSpace(object):
         plt.tight_layout()
         
 if __name__ == '__main__':
-
+    import PlottingFun as pf
     import matplotlib.pylab as plt
     color = colorSpace()
     
