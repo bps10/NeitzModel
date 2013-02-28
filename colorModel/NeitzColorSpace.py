@@ -237,6 +237,23 @@ class colorSpace(object):
         '''
         return {'r': self.rVal, 'g': self.gVal, 'b': self.bVal, }
 
+    def _EEcmf(self, r_, g_, b_):   
+        '''
+        '''
+        
+        r_ *= 100. / self.EEfactors['r'] 
+        g_ *= 100. / self.EEfactors['g']
+        b_ *= 100. / self.EEfactors['b']
+        
+        return [r_, g_, b_]
+        
+    def _solve(self, g, b):
+        k = (g - b) / g
+        check = (k * g) + b - g
+        if check < 10e-10:
+            return k
+        else:
+            raise IOError('equation was not solved correctly')
 
         
 if __name__ == '__main__':
