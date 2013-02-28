@@ -30,7 +30,7 @@ class colorSpace(object):
                            'm': 526.0, 
                            's': 444.0, }
 
-        if stim.lower() == 'cie':
+        if stim.lower() == 'cie' or stim.lower() == 'cie 1932':
             self.lights = {'l': 700.0, 
                            'm': 546.1, 
                            's': 435.8, }
@@ -121,9 +121,11 @@ class colorSpace(object):
     def genStockmanFilter(self, maxLambda=770):
         '''
         '''
-        lens = np.genfromtxt(settings.STATIC_ROOT + '/stockman/lens.csv', delimiter=',')[::10, :]
+        lens = np.genfromtxt(settings.STATIC_ROOT + '/stockman/lens.csv', 
+                             delimiter=',')[::10, :]
         macula = np.genfromtxt(settings.STATIC_ROOT + 
-                                '/stockman/macular.csv', delimiter=',')[::10, :]
+                                '/stockman/macular.csv', 
+                                delimiter=',')[::10, :]
 
         spectrum = lens[:, 0]
         ind = np.where(spectrum == maxLambda)[0]

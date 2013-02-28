@@ -38,9 +38,7 @@ function dataFormatter(x,y) {
     return dat
 };
 
-
 var data = dataFormatter(x, y);
-console.log(data);
 
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -81,36 +79,52 @@ var svg = d3.select("body").append("svg")
     .attr("class", "line")
     .attr("d", line);
 
-	/*
-    d3.select("#powerInput").on("change", changePower);
-    d3.select("#coneInput").on("change", changeCone);
+    d3.select("#stimParam").on("change", changeStim);
+    d3.select("#fundamentals").on("change", changeFund);
+    d3.select("#Lpeak").on("change", changeLpeak);
+    d3.select("#Mpeak").on("change", changeMpeak);
+    d3.select("#Speak").on("change", changeSpeak);
 
-	*/
+    function changeStim() {
+        stim = this.value;
+        // post and then redraw w/ new values
+    }
 
+    function changeFund() {
+        fundamental = this.value;
+    }
 
-    function changePeak() {
-        peak = this.value;
-        console.log(peak);
+    function changeLpeak() {
+        Lpeak = this.value;
 
-        d3.select("#cone_val").remove();
+        d3.select("#Lpeak_val").remove();
 
-        d3.select("#cone_text").append("span")
-        .attr("id", "cone_val")
-        .style("color", "black")
-        .text(spacing + " nm");
-
+        d3.select("#Lpeak_text").append("span")
+        .attr("id", "Lpeak_val")
+        .style("color", "red")
+        .text(Lpeak + " nm");
     };
 
-
-    function changePower() {
-        power = this.value;
-
-        d3.select("#power_val").remove();
-
-        d3.select("#power_text").append("span")
-        .attr("id", "power_val")
-        .style("color", "black")
-        .text(power);
-
+    function changeMpeak() {
+        Mpeak = this.value;
+        
+        d3.select("#Mpeak_val").remove();
+        
+        d3.select("#Mpeak_text").append("span")
+        .attr("id", "Mpeak_val")
+        .style("color", "green")
+        .text(Mpeak + " nm");
     };
+
+    function changeSpeak() {
+        Speak = this.value;
+        
+        d3.select("#Speak_val").remove();
+        
+        d3.select("#Speak_text").append("span")
+        .attr("id", "Speak_val")
+        .style("color", "blue")
+        .text(Speak + " nm");
+    };
+
 

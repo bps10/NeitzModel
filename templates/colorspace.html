@@ -13,7 +13,6 @@
 
 
 <script src="http://d3js.org/d3.v3.min.js"></script>
-<script src="{{ STATIC_URL }}js/d3.legend.js"></script>
 <script src="{{ STATIC_URL }}js/jquery.js" type='text/javascript'></script>
 <script src="{{ STATIC_URL }}js/genRepo.js" type='text/javascript'></script>
 
@@ -26,7 +25,7 @@
 
         <form id= "optionsForm" action="." method="post">
             {% csrf_token %}
-            <span> parameters: </span>
+            <span style='font-weight:bold;'> parameters: </span>
             <br>
             <br>
             <span id='primaries_text'>primaries </span>
@@ -46,13 +45,30 @@
             <br>
             <span id='peakParam'>LMS peak sensitivity: </span>
             <br>
-            <input name='Lpeak' id='LMSpeaks' type='range' min=400 max=600 step=1 value={{ Lpeak }}>
+            <span id='Lpeak_text' style='color:red'>
+                <input name='Lpeak' id='Lpeak' type='range' min=400 max=600 step=1 
+                    value={{ Lpeak }}> L:
+                <span id='Lpeak_val' style='color:red'> {{ Lpeak }} nm
+                </span>
+            </span>
             <br>
-            <input name='Mpeak' id='LMSpeaks' type='range' min=400 max=600 step=1 value={{ Mpeak }}>
+            <span id='Mpeak_text' style='color:green'>
+                <input name='Mpeak' id='Mpeak' type='range' min=400 max=600 step=1 
+                    value={{ Mpeak }}> M:
+                <span id='Mpeak_val' style='color:green'>  {{ Mpeak }} nm
+                </span>
+            </span>
             <br>
-            <input name='Speak' id='LMSpeaks' type='range' min=400 max=600 step=1 value={{ Speak }}>
+            <span id='Speak_text' style='color:blue'>
+                <input name='Speak' id='Speak' type='range' min=400 max=600 step=1 
+                    value={{ Speak }}> S:
+                <span id='Speak_val' style='color:blue'>  {{ Speak }} nm
+                </span>
+            </span>
             <br>
-
+            <br>
+            <input type="submit" value="update" id="runButton">
+           
         </form>
     </div>
 
@@ -60,10 +76,13 @@
     // variables here
     var x = {{ x }},
         y = {{ y }};
+
+    stimP = "{{ stim }}",
+    fundP = "{{ fundamental }}",
     
     // update select boxes with selected index
-    //selected("opticSetting1", opt1);
-    //selected("opticSetting2", opt2);
+    selected("stimParam", stimP);
+    selected("fundamentals", fundP);
 
 </script>
 
@@ -79,7 +98,7 @@
 
 
     <h1 align=center> _______ </h1>
-    <h2 align=center> explanation of the model</h2>
+    <h2 align=center> explanation of the space</h2>
 
     <p> A longer description of this project is being written.</p>
 

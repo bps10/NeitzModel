@@ -60,7 +60,7 @@ def color(request):
     if request.method == 'GET':
         stim = 'wright'
         fundamental = 'neitz'
-        LMSpeaks = [559.0, 530.0, 421.0]
+        LMSpeaks = [559, 530, 421]
         color = cs.colorSpace(stim=stim, fundamental=fundamental, 
                               LMSpeaks=LMSpeaks)
                      
@@ -78,9 +78,12 @@ def color(request):
                                     })
                                      
     if request.method == 'POST':
-        stim = 'wright'
-        fundamental = 'neitz'
-        LMSpeaks = [559.0, 530.0, 421.0]
+        stim = str(request.POST['stim'])
+        fundamental = str(request.POST['fund'])
+        lpeak = float(request.POST['Lpeak'])
+        mpeak = float(request.POST['Mpeak'])
+        speak = float(request.POST['Speak'])
+        LMSpeaks = [lpeak, mpeak, speak]
         color = cs.colorSpace(stim=stim, fundamental=fundamental, 
                               LMSpeaks=LMSpeaks)
                      
