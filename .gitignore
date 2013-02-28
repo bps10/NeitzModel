@@ -8,5 +8,6 @@ db.db
 .ebextensions/
 *.log
 *.pot
-*.nja
+.spyderproject
+.spyderworkspace
 
