@@ -95,9 +95,9 @@ def color(request):
                                      'y': yVal,
                                      'stim': stim,
                                      'fundamental': fundamental,
-                                     'Lpeak': LMSpeaks[0],
-                                     'Mpeak': LMSpeaks[1],
-                                     'Speak': LMSpeaks[2],
+                                     'Lpeak': int(LMSpeaks[0]),
+                                     'Mpeak': int(LMSpeaks[1]),
+                                     'Speak': int(LMSpeaks[2]),
                                     })
                                     
     return HttpResponse(t.render(c))
