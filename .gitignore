@@ -9,3 +9,5 @@ db.db
 *.log
 *.pot
 NeitzModel.nja
+.spyderproject
+.spyderworkspace

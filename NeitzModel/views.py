@@ -7,6 +7,9 @@ from eschaton.eschaton import eye
 from eschaton.eschaton.cones import dogRFields as df
 from eschaton.eschaton.scene import powerlaw
 
+# color model imports
+from colorModel import NeitzColorSpace as cs
+
 schemEye = eye.eyeModel.SchematicEye().returnOSLOdata()
 powerlaw = powerlaw.normPowerlaw
 
@@ -49,7 +52,53 @@ def arrayMultiply(inputA, inputB):
     return output
 
 
-# view
+# views:
+    
+def color(request):
+    t = loader.get_template('colorspace.html')
+
+    if request.method == 'GET':
+        stim = 'wright'
+        fundamental = 'neitz'
+        LMSpeaks = [559.0, 530.0, 421.0]
+        color = cs.colorSpace(stim=stim, fundamental=fundamental, 
+                              LMSpeaks=LMSpeaks)
+                     
+        rgb = color.return_rgb()
+        xVal = rgb['r'].tolist()
+        yVal = rgb['g'].tolist()
+    
+        c = RequestContext(request, {'x': xVal,
+                                     'y': yVal,
+                                     'stim': stim,
+                                     'fundamental': fundamental,
+                                     'Lpeak': LMSpeaks[0],
+                                     'Mpeak': LMSpeaks[1],
+                                     'Speak': LMSpeaks[2],
+                                    })
+                                     
+    if request.method == 'POST':
+        stim = 'wright'
+        fundamental = 'neitz'
+        LMSpeaks = [559.0, 530.0, 421.0]
+        color = cs.colorSpace(stim=stim, fundamental=fundamental, 
+                              LMSpeaks=LMSpeaks)
+                     
+        rgb = color.return_rgb()
+        xVal = rgb['r'].tolist()
+        yVal = rgb['g'].tolist()
+        
+        c = RequestContext(request, {'x': xVal,
+                                     'y': yVal,
+                                     'stim': stim,
+                                     'fundamental': fundamental,
+                                     'Lpeak': LMSpeaks[0],
+                                     'Mpeak': LMSpeaks[1],
+                                     'Speak': LMSpeaks[2],
+                                    })
+                                    
+    return HttpResponse(t.render(c))
+           
 def index(request):
     t = loader.get_template('index.html')
 
