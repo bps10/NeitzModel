@@ -116,9 +116,10 @@ pre{
     height: 100px;
     width: 150px;
 }
+
 #runButton {           
-    width: 130px;
-    font-size: 18px;
+    width: 220px;
+    font-size: 30px;
 }
 
 #powLaw {
