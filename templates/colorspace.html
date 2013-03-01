@@ -7,7 +7,7 @@
 
     @import url("{{ STATIC_URL }}style/style.css");
     @import url("{{ STATIC_URL }}style/colorspace.css");
-    @import url("{{ STATIC_URL }}style/bootstrap.min.css");
+
 </style>
 </head>
 
@@ -31,8 +31,8 @@
             <span id='primaries_text'>primaries </span>
             <select id='stimParam' name="stim">
                 <option id="wright"> Wright
-                <option id="stockman"> Stockman
-                <option id="cie"> CIE 1932
+                <option id="stockman"> Stiles and Burch
+                <option id="cie"> CIE 1931
             </select>
             <br><br>
 
@@ -95,13 +95,37 @@
 
     <h2 align=center>instructions</h2>
     <p> Try playing around with the options above.</p>
+
+    <h3>parameters</h3>
+    <hr />
+    <ul>
+        <li><em>primaries</em></li>
+        <br>
+            <ol>
+                <li>Wright - Taken from his 1946 work the primaries
+                are as follows:<br><pre> R: 650, G: 530, B: 460 </pre></li>
+                <li>Stiles and Burch - From their 1955 work the primaries
+                are as follows:<br><pre> R: 645, G: 526, B: 444 </pre></li>
+                <li>CIE 1931 -<br><pre> R: 700, G: 546.1, B: 435.8 </pre></li>
+            </ol>
+        <br>
+        <li><em>fundamentals</em></li>
+        <br>
+            <ol>
+                <li>Neitz - from Carroll, McMahon, Neitz Neitz 2000</li>
+                <li>Stockman - from Stockman & Sharpe 2000</li>
+            </ol>
+        <br>
+        <li><em>peak sensitivities</em></li>
+    </ul>
     <p> <b>Note: manipulating the peak sensitivities will only work
     with the Neitz fundamentals</b> </p>
 
+    <hr />
+    <br>
 
     <h1 align=center> _______ </h1>
     <h2 align=center> explanation of the space</h2>
-
     <p> A longer description of this project is being written.</p>
 
 </div>

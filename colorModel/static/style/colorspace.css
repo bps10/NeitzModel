@@ -1,6 +1,6 @@
 body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  position: relative;
+  position: auto;
   width: 960px;
 }
 
@@ -21,11 +21,22 @@ svg {
     stroke: #000;
     shape-rendering: crispEdges;
 }
-    
+
+select {
+    width: 100px;
+    left: 1px;
+    float: right;
+    height: 25px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background-color: #ffffff;
+    border: 1px solid #cccccc;
+    outline: 5px auto -webkit-focus-ring-color;
+    outline-offset: -2px;
+    }    
+
 div.textArea {
     width: 800px;
     position: absolute;
-    left: 50px;
     top: 550px;
     font-size: 16px;
 }
@@ -50,7 +61,20 @@ div.textArea {
 span.textbox {
     font-size: 18px;
 }
-    
+
+pre{
+    display:block;
+    font-family:Georgia,Garamond,serif!important;
+    font-size:110%!important;
+    font-style:italic;
+    line-height:1.6em;
+    margin-left:1em;
+    border-left: 6px solid #ccc;
+    display: block;
+    padding: 0.5em;
+    color: #000;
+}
+
 #options {
     position: absolute;
     left: 50px;

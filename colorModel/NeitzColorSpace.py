@@ -13,8 +13,8 @@ class colorSpace(object):
     def __init__(self, stim='wright', fundamental='neitz', 
                  LMSpeaks=[559.0, 530.0, 421.0]):
         
-        if (stim.lower() != 'wright' and stim.lower() != 'stockman' 
-            and stim.lower() != 'cie'):
+        if (stim.lower() != 'wright' and stim.lower() != 'stiles and burch' 
+            and stim.lower() != 'cie 1931'):
             print 'Sorry, stim light not understood, using wright'
             stim = 'wright' 
 
@@ -24,12 +24,12 @@ class colorSpace(object):
                             'm': 530.0,
                             's': 460.0,
                            }
-        if stim.lower() == 'stockman':
+        if stim.lower() == 'stiles and burch':
             self.lights = {'l': 645.0, 
                            'm': 526.0, 
                            's': 444.0, }
 
-        if stim.lower() == 'cie' or stim.lower() == 'cie 1932':
+        if stim.lower() == 'cie 1931':
             self.lights = {'l': 700.0, 
                            'm': 546.1, 
                            's': 435.8, }
