@@ -63,7 +63,7 @@ ADMIN_MEDIA_PREFIX = ''
 # Example: "/home/media/media.lawrence.com/static/"
 
 STATIC_ROOT = os.path.join(os.path.dirname(
-    os.path.dirname(os.path.abspath(__file__))), 'static')
+    os.path.dirname(os.path.abspath(__file__))), 'sitestatic')
 
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
