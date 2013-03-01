@@ -15,7 +15,7 @@ import os
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
 # In a Windows environment this must be set to your system time zone.
-TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'America/Los_Angeles'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -64,8 +64,7 @@ if 'AWS_ACCESS_KEY_ID' in os.environ:
 STATIC_URL = '/static/'
 
 # Additional locations of static files
-STATICFILES_DIRS = (
-)
+STATICFILES_DIRS = ()
 
 # List of finder classes that know how to find static files in
 # various locations.
@@ -109,7 +108,8 @@ ROOT_URLCONF = 'NeitzModel.urls'
 WSGI_APPLICATION = 'NeitzModel.wsgi.application'
 
 TEMPLATE_DIRS = (
-    './templates'
+    os.path.join(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))), 'templates'),
 )
 
 INSTALLED_APPS = (
