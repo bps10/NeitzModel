@@ -1,7 +1,5 @@
 body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  position: auto;
-  width: 960px;
+  width: 800px;
 }
 
 svg {
@@ -37,7 +35,7 @@ select {
 div.textArea {
     width: 800px;
     position: absolute;
-    top: 550px;
+    top: 600px;
     font-size: 16px;
 }
     
@@ -88,7 +86,7 @@ pre{
 .inputholder {
     position: absolute;
     left: 30px;
-    top: 200px;
+    top: 220px;
     font-size: 16px;
     border: 4px groove #aaa;
     padding: 20px;

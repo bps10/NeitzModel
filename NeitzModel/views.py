@@ -103,7 +103,7 @@ def color(request):
     return HttpResponse(t.render(c))
            
 def index(request):
-    t = loader.get_template('index.html')
+    t = loader.get_template('emmetropization.html')
 
     if request.method == 'GET':
         # power law and MTFs
