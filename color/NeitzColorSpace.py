@@ -255,7 +255,205 @@ class colorSpace(object):
         else:
             raise IOError('equation was not solved correctly')
 
+    
+    def plotCompare(self, compare=['stockman', 'stockSpecSens', 'neitz']):
+        '''
+            '''
+        self.genStockmanFilter()
         
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        pf.AxisFormat()
+        pf.TufteAxis(ax, ['left', 'bottom'], Nticks=[5, 5])
+        style = ['-', '--', '-.']
+        for i, condition in enumerate(compare):
+            print condition
+            self.genLMS(fund=condition)
+            
+            ax.plot(self.spectrum, self.Lnorm, 'r' + style[i], linewidth=2)
+            ax.plot(self.spectrum, self.Mnorm, 'g' + style[i], linewidth=2)
+            ax.plot(self.spectrum, self.Snorm, 'b' + style[i], linewidth=2)
+        #ax.set_ylim([-0.01, 1.01])
+        ax.set_xlim([380, 781])
+        ax.set_xlabel('wavelength (nm)')
+        ax.set_ylabel('sensitivity')
+        plt.tight_layout()
+        plt.show()
+
+    def plotFilters(self):
+        '''
+            '''
+        try:
+            plt.__version__
+        except NameError:
+            import matplotlib.pylab as plt
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        pf.AxisFormat()
+        pf.TufteAxis(ax, ['left', 'bottom'], Nticks=[5, 5])
+        ax.semilogy(self.spectrum, self.filters, 'k', linewidth=2)
+        ax.set_ylabel('log density')
+        ax.set_xlabel('wavelength (nm)')
+        ax.set_xlim([380, 781])
+        ax.set_ylim([-10, max(self.filters)])
+        plt.tight_layout()
+        plt.show()
+
+    def plotSpecSens(self):
+        '''
+            '''
+        try:
+            plt.show()
+        except NameError:
+            import matplotlib.pylab as plt
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        pf.AxisFormat()
+        pf.TufteAxis(ax, ['left', 'bottom'], Nticks=[5, 5])
+        ax.plot(self.spectrum, self.Lnorm, 'r', linewidth=2)
+        ax.plot(self.spectrum, self.Lc, 'r--', linewidth=2)
+        ax.plot(self.spectrum, self.Mnorm, 'g', linewidth=2)
+        ax.plot(self.spectrum, self.Mc, 'g--', linewidth=2)
+        ax.plot(self.spectrum, self.Snorm, 'b', linewidth=2)
+        ax.plot(self.spectrum, self.Sc, 'b--', linewidth=2)
+        
+        ax.set_ylim([-0.01, 1.01])
+        ax.set_xlim([380, 781])
+        ax.set_xlabel('wavelength (nm)')
+        ax.set_ylabel('sensitivity')
+        plt.tight_layout()
+        plt.show()
+    
+    def plotCMFs(self):
+        '''
+            '''
+        try:
+            plt.__version__
+        except NameError:
+            import matplotlib.pylab as plt
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        pf.AxisFormat()
+        pf.TufteAxis(ax, ['left', 'bottom'], Nticks=[5, 5])
+        ax.plot(self.spectrum, self.CMFs[0, :], 'r', linewidth=2)
+        ax.plot(self.spectrum, self.CMFs[1, :], 'g', linewidth=2)
+        ax.plot(self.spectrum, self.CMFs[2, :], 'b', linewidth=2)
+        ax.set_xlim([self.spectrum[0], self.spectrum[-1]])
+        ax.set_xlabel('wavelength (nm)')
+        ax.set_ylabel('sensitivity')
+        plt.tight_layout()
+        plt.show()
+
+    def plotcoeff(self):
+        '''
+            '''
+        try:
+            plt.__version__
+        except NameError:
+            import matplotlib.pylab as plt
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        pf.AxisFormat()
+        pf.TufteAxis(ax, ['left', 'bottom'], Nticks=[5, 5])
+        ax.plot(self.spectrum, self.rVal, 'r', linewidth=2)
+        ax.plot(self.spectrum, self.gVal, 'g', linewidth=2)
+        ax.plot(self.spectrum, self.bVal, 'b', linewidth=2)
+        ax.set_xlim([self.spectrum[0], self.spectrum[-1]])
+        ax.set_xlabel('wavelength (nm)')
+        ax.set_ylabel('coefficients')
+        plt.tight_layout()
+        plt.show()
+
+    def plotColorSpace(self):
+        '''
+            '''
+        self._plotColorSpace()
+        plt.show()
+    
+    def _plotColorSpace(self):
+        '''
+            '''
+        
+        try:
+            plt.__version__
+        except NameError:
+            import matplotlib.pylab as plt
+        
+        fig = plt.figure()
+        self.cs_ax = fig.add_subplot(111)
+        pf.AxisFormat(FONTSIZE=10, TickSize=6)
+        pf.centerAxes(self.cs_ax)
+        
+        self.cs_ax.plot(self.rVal, self.gVal, 'k', linewidth=3.5)
+        
+        # add equi-energy location to plot
+        self.cs_ax.plot(1.0/3.0, 1.0/3.0, 'ko', markersize=5)
+        self.cs_ax.annotate(s='{}'.format('E'), xy=(1./3.,1./3.), xytext=(2,8),
+                            ha='right', textcoords='offset points', fontsize=14)
+        
+        # annotate plot
+        dat = zip(self.spectrum[::10], self.rVal[::10], self.gVal[::10])
+        for text, X, Y in dat:
+            if text > 460 and text < 630:
+                
+                if text <= 500:
+                    self.cs_ax.scatter(X - 0.02, Y, marker='_', s=150, c='k')
+                    self.cs_ax.annotate(s='{}'.format(int(text)),
+                                        xy=(X, Y),
+                                        xytext=(-15, -5),
+                                        ha='right',
+                                        textcoords='offset points', fontsize=16)
+                elif text > 500 and text <= 510:
+                    self.cs_ax.scatter(X, Y + 0.02, marker='|', s=150, c='k')
+                    self.cs_ax.annotate(s='{}'.format(int(text)),
+                                        xy=(X, Y),
+                                        xytext=(5, 20),
+                                        ha='right',
+                                        textcoords='offset points', fontsize=16)
+                else:
+                    self.cs_ax.scatter(X + 0.02, Y, marker='_', s=150, c='k')
+                    self.cs_ax.annotate(s='{}'.format(int(text)),
+                                        xy=(X, Y),
+                                        xytext=(45, -5),
+                                        ha='right',
+                                        textcoords='offset points', fontsize=16)
+
+        #self.cs_ax.set_xlim([-0.4, 1.2])
+        #self.cs_ax.set_ylim([-0.2, 1.2])
+
+        plt.tight_layout()
+    #plt.show()
+
+    def plotConfusionLines(self, deficit='protan'):
+        '''add confusion lines
+            '''
+        
+        self._plotColorSpace()
+        self.find_copunctuals()
+        print deficit, ': ', self.copunctuals[deficit]
+        
+        if deficit.lower() == 'deutan' or deficit.lower() == 'protan':
+            lambdas = [420, 460, 470, 480, 490, 500, 515,]
+        elif deficit.lower() == 'tritan':
+            lambdas = [420, 460, 480, 500, 520, 535, 545, 555,
+                       570, 585, 600, 625, 700]
+        
+        self.cs_ax.plot(self.copunctuals[deficit][0],
+                        self.copunctuals[deficit][1], 'ko', markersize=8)
+        for lam in lambdas:
+            self.cs_ax.plot([self.find_testLight(lam)[0],
+                             self.copunctuals[deficit][0]],
+                            [self.find_testLight(lam)[1],
+                             self.copunctuals[deficit][1]],
+                            'k-', linewidth=1)   
+        
+        self.cs_ax.text(0.7, 1, deficit, fontsize=18)
+        plt.show()                 
+
 if __name__ == '__main__':
     color = colorSpace()
     

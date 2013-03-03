@@ -7,7 +7,7 @@ from django.conf.urls import patterns, include, url
 
 urlpatterns = patterns('',
     # Examples:
-    url(r'^$', 'NeitzModel.views.index', name='index'),
+    url(r'^$', 'NeitzModel.views.emmetrop', name='emmetrop'),
     url(r'^colorspace/', 'NeitzModel.views.color', name='colorspace'),
 
     # Uncomment the next line to enable the admin:

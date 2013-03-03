@@ -2,13 +2,13 @@ from django.template import RequestContext, loader
 from django.http import HttpResponse
 #from django.utils import simplejson
 
-# eschaton imports
-from eschaton.eschaton import eye
-from eschaton.eschaton.cones import dogRFields as df
-from eschaton.eschaton.scene import powerlaw
+# emmetrop imports
+from emmetrop.emmetrop import eye
+from emmetrop.emmetrop.cones import dogRFields as df
+from emmetrop.emmetrop.scene import powerlaw
 
 # color model imports
-from colorModel import NeitzColorSpace as cs
+from color import NeitzColorSpace as cs
 
 schemEye = eye.eyeModel.SchematicEye().returnOSLOdata()
 powerlaw = powerlaw.normPowerlaw
@@ -102,7 +102,7 @@ def color(request):
                                     
     return HttpResponse(t.render(c))
            
-def index(request):
+def emmetrop(request):
     t = loader.get_template('emmetropization.html')
 
     if request.method == 'GET':
