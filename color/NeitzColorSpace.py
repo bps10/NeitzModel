@@ -77,7 +77,7 @@ class colorSpace(object):
             MS = np.log10((1.0 - 10.0 ** -((10.0 ** foo[:, 2]) *
                     0.5)) / (1.0 - 10 ** -0.5))
             SS = np.log10((1.0 - 10.0 ** -((10.0 ** foo[:, 3]) *
-                    0.5)) / (1.0 - 10 ** -0.4))
+                    0.4)) / (1.0 - 10 ** -0.4))
           
             self.Lc = 10.0 ** LS[:ind]
             self.Mc = 10.0 ** MS[:ind]
@@ -91,11 +91,11 @@ class colorSpace(object):
             minspec = min(self.spectrum)
             maxspec = max(self.spectrum)
             self.Lc = spectsens(LMSpeaks[0], 0.5, 'anti-log', minspec, 
-                                             maxspec, 1)[1]
+                                             maxspec, 1)[0]
             self.Mc = spectsens(LMSpeaks[1], 0.5, 'anti-log', minspec, 
-                                             maxspec, 1)[1]
+                                             maxspec, 1)[0]
             self.Sc = spectsens(LMSpeaks[2], 0.4, 'anti-log', minspec, 
-                                             maxspec, 1)[1]
+                                             maxspec, 1)[0]
                                                          
             Lresponse = self.Lc / self.filters * self.spectrum
             Mresponse = self.Mc / self.filters * self.spectrum
@@ -208,19 +208,26 @@ class colorSpace(object):
         err = lambda r, g, lam: ((r - self.rVal[lam])**2 + (g - 
                                 self.gVal[lam])**2)
         i = 0
+        startE = err(r, g, i)
         error = True
-        while error:
-            e = err(r, g, i)
-            if e < 10e-4:
-                error = False
-            else:
-                i += 1
+        try:
+            while error:
+                e = err(r, g, i)
                 
-        #linear interpolate between points
-        t0 = err(r, g, i)
-        t1 = err(r, g, i + 1)
-        outLam = self.spectrum[i] + (0 - t0 / (t1 - t0))
-        return outLam
+                if startE < e and e < 10e-2:
+                    error = False
+                else:
+                    startE = e
+                    i += 1
+                    
+            #linear interpolate between points
+            t0 = err(r, g, i)
+            t1 = err(r, g, i + 1)
+            outLam = self.spectrum[i] + (0 - t0 / (t1 - t0))
+            return outLam
+        except IndexError:
+            raise IndexError('Pure light not found. Are you sure the [r, g] \
+                            coords lie on the spectral line?')
         
     def find_rgb(self, LMS):
         '''
@@ -255,11 +262,26 @@ class colorSpace(object):
         
         return [r_, g_, b_]
 
-    def lambda2BY(self, lam):
+    def lambda2BY(self, lam, verbose=False):
         '''
         '''
-        pass
-    
+        r, g, b = self.find_testLightMatch(lam)
+        line = self._lineEq(r, g)
+        self.find_copunctuals()
+        imagLine = self._lineEq(self.copunctuals['deutan'][0], 
+                                self.copunctuals['deutan'][1],
+                                self.copunctuals['tritan'][0], 
+                                self.copunctuals['tritan'][1])
+        xpoints = np.arange(self.copunctuals['tritan'][0], 
+                            self.copunctuals['deutan'][0], 0.01)
+        ypoints = imagLine(xpoints)
+        neutPoint = self._findDataIntercept(xpoints, ypoints, line)
+
+        if verbose is True:
+            return neutPoint, [r, g]
+        else:
+            return neutPoint
+            
     def BY2lambda(self, propS, propM, verbose=False):
         '''
         '''
@@ -276,13 +298,18 @@ class colorSpace(object):
         else:
             return neutPoint
         
-    def _lineEq(self, x, y):
+    def _lineEq(self, x1, y1, x2=None, y2=None):
         '''Return the equation of a line from a given point that will pass
         through equal energy. Returns a function that takes one variable, x, 
         and returns y.
         '''
-        m_ = ((1. / 3.) - y) / ((1. / 3.) - x)
-        b_ = (y) - (m_ * (x))
+        if x2 == None:
+            x2 = 1. / 3.
+        if y2 == None:
+            y2 = 1. / 3.
+            
+        m_ = (y2 - y1) / (x2 - x1)
+        b_ = (y1) - (m_ * (x1))
         return lambda x: (m_ * x) + b_
 
     def _findDataIntercept(self, x, y, func):
@@ -436,9 +463,9 @@ class colorSpace(object):
             neut, RG = self.BY2lambda(s, m, True)
             
             if PRINT is True:
-                print RG
-                print neut
-                #print self.find_testlightFromRG(RG[0], RG[1])
+                #print RG
+                #print neut
+                print self.find_testlightFromRG(neut[0], neut[1])
             self.cs_ax.plot([neut[0], RG[0]], [neut[1], RG[1]], 
                             '-o', c=(0, m, s), markersize=8, linewidth=2)
         
@@ -448,6 +475,32 @@ class colorSpace(object):
         
         plt.show()
             
+    def plotConfusionLines(self, deficit='protan'):
+        '''add confusion lines
+            '''
+        
+        self._plotColorSpace()
+        self.find_copunctuals()
+        print deficit, ': ', self.copunctuals[deficit]
+        
+        if deficit.lower() == 'deutan' or deficit.lower() == 'protan':
+            lambdas = [420, 460, 470, 480, 490, 500, 515,]
+        elif deficit.lower() == 'tritan':
+            lambdas = [420, 460, 480, 500, 520, 535, 545, 555,
+                       570, 585, 600, 625, 700]
+        
+        self.cs_ax.plot(self.copunctuals[deficit][0],
+                        self.copunctuals[deficit][1], 'ko', markersize=8)
+        for lam in lambdas:
+            self.cs_ax.plot([self.find_testLightMatch(lam)[0],
+                             self.copunctuals[deficit][0]],
+                            [self.find_testLightMatch(lam)[1],
+                             self.copunctuals[deficit][1]],
+                            'k-', linewidth=1)   
+        
+        self.cs_ax.text(0.7, 1, deficit, fontsize=18)
+        plt.show()                 
+
     def _plotColorSpace(self):
         '''
         '''
@@ -504,33 +557,8 @@ class colorSpace(object):
         #self.cs_ax.set_ylim([-0.2, 1.2])
 
         plt.tight_layout()
-    #plt.show()
+        #plt.show()
 
-    def plotConfusionLines(self, deficit='protan'):
-        '''add confusion lines
-            '''
-        
-        self._plotColorSpace()
-        self.find_copunctuals()
-        print deficit, ': ', self.copunctuals[deficit]
-        
-        if deficit.lower() == 'deutan' or deficit.lower() == 'protan':
-            lambdas = [420, 460, 470, 480, 490, 500, 515,]
-        elif deficit.lower() == 'tritan':
-            lambdas = [420, 460, 480, 500, 520, 535, 545, 555,
-                       570, 585, 600, 625, 700]
-        
-        self.cs_ax.plot(self.copunctuals[deficit][0],
-                        self.copunctuals[deficit][1], 'ko', markersize=8)
-        for lam in lambdas:
-            self.cs_ax.plot([self.find_testLightMatch(lam)[0],
-                             self.copunctuals[deficit][0]],
-                            [self.find_testLightMatch(lam)[1],
-                             self.copunctuals[deficit][1]],
-                            'k-', linewidth=1)   
-        
-        self.cs_ax.text(0.7, 1, deficit, fontsize=18)
-        plt.show()                 
 
 if __name__ == '__main__':
     
