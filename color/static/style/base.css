@@ -1,5 +1,6 @@
 body {
-  background: white;  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: white;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 38px;
   position: auto;
 
@@ -10,6 +11,11 @@ table {
     font-family: "Helvetica Neue";
     padding-right: 10px;
 }
+
+aside {
+    right: 40px;
+    font-size: 14px;
+    }
 
 td,th,tr {
     padding-right: 10px;

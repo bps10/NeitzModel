@@ -1,10 +1,12 @@
-# -*- coding: utf-8 *-*
+ # -*- coding: utf-8 *-*
 from __future__ import division
 import numpy as np
 
 from spectsens import spectsens
 
-from NeitzModel import settings
+if __name__ != '__main__':
+    from NeitzModel import settings
+    STATIC_ROOT = settings.STATIC_ROOT
 ## todo:: Create a logging function.
 
 class colorSpace(object):
@@ -53,7 +55,7 @@ class colorSpace(object):
         
         if fundamental.lower() == 'stockman':
             ind = len(self.spectrum)
-            foo = np.genfromtxt(settings.STATIC_ROOT + 
+            foo = np.genfromtxt(STATIC_ROOT + 
                                     '/stockman/fundamentals2deg.csv', 
                                  delimiter=',')[::10, :]
             self.Lc = 10.0 ** foo[:ind, 1]
@@ -66,7 +68,7 @@ class colorSpace(object):
             
         elif fundamental.lower() == 'stockspecsens':
             ind = len(self.spectrum)
-            foo = np.genfromtxt(settings.STATIC_ROOT + 
+            foo = np.genfromtxt(STATIC_ROOT + 
                                     '/stockman/specSens.csv', 
                                 delimiter=',')[::10, :]
 
@@ -120,9 +122,9 @@ class colorSpace(object):
     def genStockmanFilter(self, maxLambda=770):
         '''
         '''
-        lens = np.genfromtxt(settings.STATIC_ROOT + '/stockman/lens.csv', 
+        lens = np.genfromtxt(STATIC_ROOT + '/stockman/lens.csv', 
                              delimiter=',')[::10, :]
-        macula = np.genfromtxt(settings.STATIC_ROOT + 
+        macula = np.genfromtxt(STATIC_ROOT + 
                                 '/stockman/macular.csv', 
                                 delimiter=',')[::10, :]
 
@@ -130,7 +132,7 @@ class colorSpace(object):
         ind = np.where(spectrum == maxLambda)[0]
         self.spectrum = spectrum[:ind+1]
         
-        self.filters = 10.0 ** (lens[:ind+1, 1] +  macula[:ind+1, 1])
+        self.filters = 10.0 ** (lens[:ind + 1, 1] +  macula[:ind + 1, 1])
         
     def LMStoCMFs(self):
         '''
@@ -139,8 +141,7 @@ class colorSpace(object):
         LMSsens = np.array([self.Lnorm.T, self.Mnorm.T, self.Snorm.T])
         self.CMFs = np.dot(np.linalg.inv(self.convMatrix), LMSsens)
         
-        #save sums for later normalization:
-            
+        #save sums for later normalization:            
         Rnorm = sum(self.CMFs[0, :])
         Gnorm = sum(self.CMFs[1, :])
         Bnorm = sum(self.CMFs[2, :])
@@ -200,19 +201,26 @@ class colorSpace(object):
         rOut, gOut, bOut = self.find_rgb(LMS=np.array([l_, m_, s_]))
 
         return [rOut, gOut, bOut]        
-        
-    def find_neitzMatch(self, testLight=500):
+    
+    def find_testlightFromRG(self, r, g):
         '''
         '''
-        r_, g_, b_ = self.find_testLightMatch(testLight)
-        print r_, g_, b_
-
-        xOut = r_
-        k = self._solve(g_, b_)
-        print 'k: ', k       
-        yOut = k * g_ + b_
-
-        print xOut, yOut
+        err = lambda r, g, lam: ((r - self.rVal[lam])**2 + (g - 
+                                self.gVal[lam])**2)
+        i = 0
+        error = True
+        while error:
+            e = err(r, g, i)
+            if e < 10e-4:
+                error = False
+            else:
+                i += 1
+                
+        #linear interpolate between points
+        t0 = err(r, g, i)
+        t1 = err(r, g, i + 1)
+        outLam = self.spectrum[i] + (0 - t0 / (t1 - t0))
+        return outLam
         
     def find_rgb(self, LMS):
         '''
@@ -246,16 +254,58 @@ class colorSpace(object):
         b_ *= 100. / self.EEfactors['b']
         
         return [r_, g_, b_]
-        
-    def _solve(self, g, b):
-        k = (g - b) / g
-        check = (k * g) + b - g
-        if check < 10e-10:
-            return k
-        else:
-            raise IOError('equation was not solved correctly')
 
+    def lambda2BY(self, lam):
+        '''
+        '''
+        pass
     
+    def BY2lambda(self, propS, propM, verbose=False):
+        '''
+        '''
+        l = 0
+        m = -propM
+        s = propS
+        
+        r, g, b = self.find_rgb(np.array([l, m, s]))
+        line = self._lineEq(r, g)
+        neutPoint = self._findDataIntercept(self.rVal, self.gVal, line)
+        
+        if verbose is True:
+            return neutPoint, [r, g]
+        else:
+            return neutPoint
+        
+    def _lineEq(self, x, y):
+        '''Return the equation of a line from a given point that will pass
+        through equal energy. Returns a function that takes one variable, x, 
+        and returns y.
+        '''
+        m_ = ((1. / 3.) - y) / ((1. / 3.) - x)
+        b_ = (y) - (m_ * (x))
+        return lambda x: (m_ * x) + b_
+
+    def _findDataIntercept(self, x, y, func):
+        '''
+        '''
+        diff = True
+        s = np.sign(func(x[0]) - y[0])
+        i = 0
+        while diff is True:
+            err = func(x[i]) - y[i]
+            sig = np.sign(err)
+            if sig != s:
+                diff = False
+            else:
+                i +=1
+        #linear interpolate between points
+        t0 = func(x[i - 1]) - y[i - 1]
+        t1 = func(x[i]) - y[i]
+        outX = x[i - 1] + ((x[i] - x[i - 1]) * (0 - t0 / (t1 - t0)))
+        outY = func(outX)
+        return [outX, outY]
+            
+
     def plotCompare(self, compare=['stockman', 'stockSpecSens', 'neitz']):
         '''
             '''
@@ -370,13 +420,37 @@ class colorSpace(object):
 
     def plotColorSpace(self):
         '''
-            '''
+        '''
         self._plotColorSpace()
         plt.show()
     
+    def plotBYsystem(self, PRINT=False, clip=True):
+        '''
+        '''
+        self._plotColorSpace()
+        
+        for s in range(0, 11):
+            m = (10.0 - s) / 10.0
+            s = s / 10.0
+            
+            neut, RG = self.BY2lambda(s, m, True)
+            
+            if PRINT is True:
+                print RG
+                print neut
+                #print self.find_testlightFromRG(RG[0], RG[1])
+            self.cs_ax.plot([neut[0], RG[0]], [neut[1], RG[1]], 
+                            '-o', c=(0, m, s), markersize=8, linewidth=2)
+        
+        if clip is True:                
+            self.cs_ax.set_xlim([-0.4, 1.2])
+            self.cs_ax.set_ylim([-0.2, 1.2])
+        
+        plt.show()
+            
     def _plotColorSpace(self):
         '''
-            '''
+        '''
         
         try:
             plt.__version__
@@ -393,7 +467,8 @@ class colorSpace(object):
         # add equi-energy location to plot
         self.cs_ax.plot(1.0/3.0, 1.0/3.0, 'ko', markersize=5)
         self.cs_ax.annotate(s='{}'.format('E'), xy=(1./3.,1./3.), xytext=(2,8),
-                            ha='right', textcoords='offset points', fontsize=14)
+                            ha='right', textcoords='offset points',
+                            fontsize=14)
         
         # annotate plot
         dat = zip(self.spectrum[::10], self.rVal[::10], self.gVal[::10])
@@ -406,21 +481,24 @@ class colorSpace(object):
                                         xy=(X, Y),
                                         xytext=(-15, -5),
                                         ha='right',
-                                        textcoords='offset points', fontsize=16)
+                                        textcoords='offset points', 
+                                        fontsize=16)
                 elif text > 500 and text <= 510:
                     self.cs_ax.scatter(X, Y + 0.02, marker='|', s=150, c='k')
                     self.cs_ax.annotate(s='{}'.format(int(text)),
                                         xy=(X, Y),
                                         xytext=(5, 20),
                                         ha='right',
-                                        textcoords='offset points', fontsize=16)
+                                        textcoords='offset points',
+                                        fontsize=16)
                 else:
                     self.cs_ax.scatter(X + 0.02, Y, marker='_', s=150, c='k')
                     self.cs_ax.annotate(s='{}'.format(int(text)),
                                         xy=(X, Y),
                                         xytext=(45, -5),
                                         ha='right',
-                                        textcoords='offset points', fontsize=16)
+                                        textcoords='offset points', 
+                                        fontsize=16)
 
         #self.cs_ax.set_xlim([-0.4, 1.2])
         #self.cs_ax.set_ylim([-0.2, 1.2])
@@ -445,9 +523,9 @@ class colorSpace(object):
         self.cs_ax.plot(self.copunctuals[deficit][0],
                         self.copunctuals[deficit][1], 'ko', markersize=8)
         for lam in lambdas:
-            self.cs_ax.plot([self.find_testLight(lam)[0],
+            self.cs_ax.plot([self.find_testLightMatch(lam)[0],
                              self.copunctuals[deficit][0]],
-                            [self.find_testLight(lam)[1],
+                            [self.find_testLightMatch(lam)[1],
                              self.copunctuals[deficit][1]],
                             'k-', linewidth=1)   
         
@@ -455,13 +533,18 @@ class colorSpace(object):
         plt.show()                 
 
 if __name__ == '__main__':
-    color = colorSpace()
     
+    STATIC_ROOT = './static'
+    
+    color = colorSpace()
+    import matplotlib.pylab as plt
+    import PlottingFun as pf
     #color.plotCompare()
     #color.plotFilters()
     #color.plotSpecSens()
     #color.plotCMFs()
     #color.plotcoeff()
     #color.plotColorSpace()
-    color.plotConfusionLines()
+    #color.plotConfusionLines()
+    color.plotBYsystem(PRINT=True)
     
