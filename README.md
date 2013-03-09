@@ -4,7 +4,7 @@
 
 ##color
 
-This module contains scripts to simulate
+This module contains scripts to simulate:
 
 1. color perception as predicted in the Neitz theory, and
 2. color spaces from spectral sensitivity functions derived by either Carroll, McMahon, Neitz, Neitz 2000 or Stockman & Sharpe 2000.

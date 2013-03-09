@@ -252,6 +252,71 @@ class colorSpace(object):
         '''
         return {'r': self.rVal, 'g': self.gVal, 'b': self.bVal, }
 
+    def kaiser(self):
+        '''
+        '''
+        kaiser = np.genfromtxt('static/data/kaiser1987.csv', delimiter=",")
+        # sort by subject:
+        subj1 = np.where(kaiser[:, 3] == 1)
+        subj2 = np.where(kaiser[:, 3] == 2)
+        s1_xy = kaiser[subj1, :2][0]
+        s2_xy = kaiser[subj2, :2][0]
+        # solve for z:
+        s1_z = 1.0 - (s1_xy[:, 1] + s1_xy[:, 0])
+        s2_z = 1.0 - (s2_xy[:, 1] + s2_xy[:, 0])
+
+        s1_xyz = np.zeros((len(s1_xy), 3))
+        s1_xyz[:, :2] = s1_xy
+        s1_xyz[:, 2] = s1_z
+
+        s2_xyz = np.zeros((len(s2_xy), 3))
+        s2_xyz[:, :2] = s2_xy
+        s2_xyz[:, 2] = s2_z
+
+        self._genJuddVos2Neitz()
+        sub1_Neitz = np.dot(s1_xyz, self.JuddVos_Neitz_transMatrix)
+        sub2_Neitz = np.dot(s2_xyz, self.JuddVos_Neitz_transMatrix)
+
+        return sub1_Neitz, sub2_Neitz        
+        
+    def _genJuddVos2Neitz(self):
+        '''
+        '''
+        juddVos = np.genfromtxt('static/data/ciexyzjv.csv', delimiter=',')
+        spec = juddVos[:, 0]
+        juddVos = juddVos[:, 1:]
+        maxLambda = max(self.spectrum)
+        minLambda = min(self.spectrum)
+        ind0 = np.where(spec == minLambda)[0]
+        ind1 = np.where(spec == maxLambda)[0] + 1
+        step = spec[1] - spec[0]
+        juddVos = juddVos[ind0:ind1, :]
+
+        neitz = np.array([self.rVal[::step], 
+                          self.gVal[::step],
+                          self.bVal[::step]]).T
+
+        self.JuddVos_Neitz_transMatrix = np.linalg.lstsq(juddVos, neitz)[0]
+        #self.JuddVos_Neitz_transMatrix = np.dot(neitz, juddVos ** -1)
+        #print foo
+        # print foo ** -1
+        print self.JuddVos_Neitz_transMatrix
+        
+    def plotKaiser(self):
+        '''
+        
+        '''
+        sub1_Neitz, sub2_Neitz = self.kaiser()
+        print sub1_Neitz
+        print sub2_Neitz
+        self._plotColorSpace()
+        
+        self.cs_ax.plot(sub1_Neitz[:, 0], sub1_Neitz[:, 1], 'rx', 
+                        markersize=8, linewidth=2)
+        self.cs_ax.plot(sub2_Neitz[:, 0], sub2_Neitz[:, 1], 'bx',
+                        markersize=8, linewidth=2)
+        plt.show()
+
     def _EEcmf(self, r_, g_, b_):   
         '''
         '''
@@ -574,5 +639,6 @@ if __name__ == '__main__':
     #color.plotcoeff()
     #color.plotColorSpace()
     #color.plotConfusionLines()
-    color.plotBYsystem(PRINT=True)
+    #color.plotBYsystem(PRINT=True)
+    color.plotKaiser()
     
