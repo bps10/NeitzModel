@@ -2,7 +2,7 @@
 .elasticbeanstalk/
 .DS_Store
 NeitzModel/local_settings.py
-*.pyc
+*.py[co]
 build/
 db.db
 .ebextensions/
