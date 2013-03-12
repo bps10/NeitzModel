@@ -65,7 +65,7 @@ class colorModel():
                 BY = temp['mCenter']
 
                 if i == 0:
-                    uniqueGreen.append(543)
+                    uniqueGreen.append(555)
                     uniqueRed.append(592)
                 else:
                     zero_cross = np.where(np.diff(np.sign(RG)))[0]
@@ -74,7 +74,7 @@ class colorModel():
 
                 if i == 100:
                     uniqueBlue.append(474)
-                    uniqueYellow.append(555)
+                    uniqueYellow.append(575)
                 else:
                     zero_cross = np.where(np.diff(np.sign(BY)))[0]
                     uniqueBlue.append(lambdas[zero_cross[0]])
@@ -103,14 +103,19 @@ class colorModel():
                             StartWavelength=startLambda,
                             OpticalDensity=0.5,
                             EndWavelength=endLambda, Res=step)[0]
+        L_cones /= self.lensMacula
+        
         M_cones = spectsens(LambdaMax=self.maxSens['m'], Output=Out,
                             StartWavelength=startLambda,
                             OpticalDensity=0.5,
                             EndWavelength=endLambda, Res=step)[0]
+        M_cones /= self.lensMacula
+        
         S_cones = spectsens(LambdaMax=self.maxSens['s'], Output=Out,
                             StartWavelength=startLambda,
                             OpticalDensity=0.4,
                             EndWavelength=endLambda, Res=step)[0]
+        S_cones /= self.lensMacula
 
         self.FirstStage = {
             'lambdas': lambdas,
@@ -136,7 +141,7 @@ class colorModel():
         for s in range(0, 101, self.step):
             for m in range(0, 101, self.step):
                 for l in range(0, 101, self.step): 
-                    if (l + m + s) == 100:
+                    if (l + m + s) == 100 and s == 5:
                         percent = {'s': s, 'm': m, 'l': l, }
                         lmsV_L = self.optimizeChannel(cones, percent,
                                                         Center=L_cones)
@@ -155,7 +160,10 @@ class colorModel():
         binom = lambda k, n, p: ((factorial(n) /
                                 (factorial(k) * factorial(n - k))
                                     * (p ** k)) * (1 - p) ** (n - k))
-            
+        #trinom = lambda l, m, s, L, M, S: (
+        #                    factorial(L + M + S) /
+        #                    (factorial(L) * factorial(M) * factorial(S)) *
+        #                    (l ** L * m ** M * s ** S))
         lCenterProb = self.lRatio / (self.mRatio + self.lRatio)
         
         self.ThirdStage = {
@@ -164,13 +172,17 @@ class colorModel():
             }
         p = 0
         for i in self.SecondStage['lmsV_L']:
+            
             lNum = self.SecondStage['percent'][i]['l']
             mNum = self.SecondStage['percent'][i]['m']
             #sNum = self.SecondStage['percent'][i]['s']
 
             probSur = (#gauss(self.sRatio * 100, sNum / self.step, 0.5) *
+                        #trinom(self.lRatio, self.mRatio, self.sRatio,
+                        #   lNum, mNum, sNum)
                         binom(lNum, lNum + mNum, lCenterProb)                         
                             )
+                            
             self.SecondStage['percent'][i]['probSurround'] = probSur
             
             p += probSur
@@ -190,10 +202,12 @@ class colorModel():
     def optimizeChannel(self, cones, percent, Center):
         '''
         '''
-        fun = lambda w, Center: (w * ((percent['s'] / 100. * cones['s']) +
-                                    (percent['m'] / 100. * cones['m']) +
-                                    (percent['l'] / 100. * cones['l'])) -
-                                 Center) / self.lensMacula
+        m_ = percent['m'] / (percent['m'] + percent['l'])
+        l_ = percent['l'] / (percent['m'] + percent['l'])
+        fun = lambda w, Center: (w * (1.5 * cones['s'] +
+                                    m_ * cones['m'] +
+                                    l_ * cones['l']) -
+                                 Center)
 
         # error function to minimize
         err = lambda w, Center: (fun(w, Center)).sum()
@@ -246,7 +260,7 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
     """
 
     model = colorModel()
-    model.genModel(ConeRatio={'fracLvM': 0.25, 's': 0.05, })
+    model.genModel(ConeRatio={'fracLvM': 0.75, 's': 0.05, })
     FirstStage = model.returnFirstStage()   
     
     if plotSpecSens:
@@ -301,9 +315,10 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
         print thresh
         
         for i in SecondStage['lmsV_L']:
-            if i % 50 == 0 or SecondStage['percent'][i][
+            if i % 2 == 0 or SecondStage['percent'][i][
                     'probSurround'] >= thresh:
                 if SecondStage['percent'][i]['probSurround'] >= thresh:
+                    print SecondStage['percent'][i]
                     ax1.plot(FirstStage['lambdas'], SecondStage['lmsV_M'][i],
                             c=(0,0,1), linewidth=1, alpha=0.25)
                     ax2.plot(FirstStage['lambdas'], SecondStage['lmsV_L'][i],
@@ -330,7 +345,8 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
     ax1 = fig.add_subplot(311)
     ax2 = fig.add_subplot(312)
     ax3 = fig.add_subplot(313)
-
+    
+    model.genModel(ConeRatio={'fracLvM': 0.25, 's': 0.05, })
     ThirdStage = model.returnThirdStage()
     
     pf.AxisFormat()     
@@ -345,7 +361,7 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
                      FirstStage['wavelen']['endWave']])
     ax1.set_ylabel('activity')
     ax1.yaxis.set_label_coords(-0.2, 0.5)
-    ax1.set_ylim([-20, 30])
+    #ax1.set_ylim([-20, 30])
     ax1.text(0.95, 0.95, '25% L', fontsize=16, 
         horizontalalignment='right',
         verticalalignment='top',
@@ -366,7 +382,7 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
                      FirstStage['wavelen']['endWave']])
     ax2.set_ylabel('activity')
     ax2.yaxis.set_label_coords(-0.2, 0.5)
-    ax2.set_ylim([-20, 30])
+    #ax2.set_ylim([-20, 30])
     ax2.text(0.95, 0.95, '50% L', fontsize=16, 
         horizontalalignment='right',
         verticalalignment='top',
@@ -388,7 +404,7 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
                      FirstStage['wavelen']['endWave']])
     ax3.set_ylabel('activity')
     ax3.yaxis.set_label_coords(-0.2, 0.5)
-    ax3.set_ylim([-20, 30])
+    #ax3.set_ylim([-20, 30])
     ax3.text(0.95, 0.95, '75% L', fontsize=16, 
         horizontalalignment='right',
         verticalalignment='top',

@@ -296,16 +296,12 @@ class colorSpace(object):
         juddVos = juddVos[ind0:ind1, :]
         spec = spec[ind0:ind1]
         
-        step = spec[1] - spec[0]
         '''
         conv = np.array([[0.49, 0.31, 0.20], 
                   [0.17697, 0.8124, 0.01063],
-                  [0.00, 0.01, 0.99]]) #* (1 / 0.01769)
+                  [0.00, 0.01, 0.99]]) * (1 / 0.01769)
         juddVos = np.dot(np.linalg.inv(conv) , juddVos.T).T
         '''
-        neitz = np.array([self.rVal[::step], 
-                  self.gVal[::step],
-                  self.bVal[::step]]).T
 
         # convert Judd-Vos CMFs into Eq En xyz space
         juddVos[:, 0] *= 100. / sum(juddVos[:, 0]) 
@@ -315,7 +311,12 @@ class colorSpace(object):
                                             juddVos[:, 1],
                                             juddVos[:, 2])
         juddVos[:, 0], juddVos[:, 1], juddVos[:, 2] = r, g, b
-                
+
+        step = spec[1] - spec[0]
+        neitz = np.array([self.rVal[::step], 
+                  self.gVal[::step],
+                  self.bVal[::step]]).T
+                  
         self.JuddVos_Neitz_lights = np.array([
             [np.interp(self.lights['l'], spec, juddVos[:, 0]),
             np.interp(self.lights['m'], spec, juddVos[:, 0]),
@@ -329,24 +330,13 @@ class colorSpace(object):
             np.interp(self.lights['m'], spec, juddVos[:, 2]),
             np.interp(self.lights['s'], spec, juddVos[:, 2])]])
 
-        self.JuddVos_Neitz_transMatrix = np.array([
-            [np.interp(self.lights['l'], self.spectrum, self.rVal),
-            np.interp(self.lights['m'], self.spectrum, self.rVal),
-            np.interp(self.lights['s'], self.spectrum, self.rVal)],
-
-            [np.interp(self.lights['l'], self.spectrum, self.gVal),
-            np.interp(self.lights['m'], self.spectrum, self.gVal),
-            np.interp(self.lights['s'], self.spectrum, self.gVal)],
-
-            [np.interp(self.lights['l'], self.spectrum, self.bVal),
-            np.interp(self.lights['m'], self.spectrum, self.bVal),
-            np.interp(self.lights['s'], self.spectrum, self.bVal)]])
-        self.JuddVos_Neitz_transMatrix -= np.min(self.JuddVos_Neitz_transMatrix)
-        print np.min(self.JuddVos_Neitz_transMatrix)
-
         foo = np.dot(np.linalg.inv(self.JuddVos_Neitz_lights), juddVos.T).T
-        foo1 = np.dot((self.JuddVos_Neitz_transMatrix), foo.T).T
         
+        self.JuddVos_Neitz_transMatrix = np.linalg.lstsq(foo, neitz)[0]
+        #print conv
+        print self.JuddVos_Neitz_transMatrix
+        
+        foo1 = np.dot((self.JuddVos_Neitz_transMatrix), foo.T).T
         cc = neitz * foo ** -1
         
         plt.figure()
@@ -357,7 +347,7 @@ class colorSpace(object):
             
         plt.figure()
         plt.plot(foo1[:,0], foo1[:,1])
-        plt.show()
+        plt.show() 
 
         print ''
         print self.JuddVos_Neitz_transMatrix
