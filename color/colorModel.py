@@ -233,6 +233,33 @@ class colorModel():
                                        #just take upto a given index (750nm)
         self.lensMacula = 10 ** (lens[:ind, 1] + macula[:ind, 1])
 
+    def getCarroll_LMratios(self):
+        '''Creates a dictionary like object.
+        '''
+        self.carroll = np.genfromtxt('static/data/Carroll2002_lmRatios.txt', 
+                            delimiter='\t', dtype=None, skip_header=0, 
+                            names=True)
+        BINS = np.arange(0, 101, 5)
+        freq, bins = plt.histogram(self.carroll['L'], bins=BINS)
+        
+        fig = plt.figure(figsize=(8, 6))
+        ax1 = fig.add_subplot(111)
+    
+        pf.AxisFormat()
+        pf.TufteAxis(ax1, ['left', 'bottom'], Nticks=[5, 5])
+        
+        bins, freq = pf.histOutline(freq / sum(freq), bins)
+        ax1.plot(bins, freq,
+                'k', linewidth=3)
+
+        ax1.set_xlim([0, 100])
+        ax1.set_ylim([-0.002, max(freq)])
+        ax1.set_ylabel('proportion')
+        ax1.set_xlabel('%L v M')
+        ax1.yaxis.set_label_coords(-0.2, 0.5)
+        plt.tight_layout()
+        plt.show()
+        
     def returnFirstStage(self):
         '''
         '''
