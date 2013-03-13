@@ -7,7 +7,7 @@ from math import factorial
 
 from spectsens import spectsens
 import PlottingFun as pf
-from sompy import SOM
+#from sompy import SOM
 
 
 class colorModel():
@@ -233,7 +233,7 @@ class colorModel():
                                        #just take upto a given index (750nm)
         self.lensMacula = 10 ** (lens[:ind, 1] + macula[:ind, 1])
 
-    def getCarroll_LMratios(self):
+    def getCarroll_LMratios(self, Volbrecht1997=False):
         '''Creates a dictionary like object.
         '''
         self.carroll = np.genfromtxt('static/data/Carroll2002_lmRatios.txt', 
@@ -249,7 +249,12 @@ class colorModel():
                               self.uniqueHues['yellow']))
                               
         BINS = np.arange(0, 101, 5)
-        BINS_G = np.arange(490, 560, 5)
+        if Volbrecht1997:
+            BINS_G = np.arange(488, 562, 3)
+            volb = np.genfromtxt('static/data/Volbrecht1997.txt', delimiter='\t',
+                          dtype=None, skip_header=0, names=True)
+        else:
+            BINS_G = np.arange(490, 560, 5)
         BINS_Y = np.arange(565, 590, 2)
         freq, bins = plt.histogram(self.carroll['L'], bins=BINS)
         freqGreen, bins = plt.histogram(green, bins=BINS_G)
@@ -271,6 +276,11 @@ class colorModel():
                                             BINS_Y)
         print freqGreen, freqYellow
         ax1.plot(BINS, freq, 'k', linewidth=3)
+        if Volbrecht1997:
+            binV, freqV = pf.histOutline(volb['count'] / sum(volb['count']),
+                                         volb['bin'])
+            ax2.plot(binV, freqV, 'k', linewidth=3)
+            
         ax2.plot(BINS_G, freqGreen, 'g', linewidth=3)
         ax3.plot(BINS_Y, freqYellow, 'y', linewidth=3)     
           
@@ -289,12 +299,16 @@ class colorModel():
         ax3.set_ylabel('proportion')
         ax3.set_xlabel('unique yellow (nm)')        
         ax3.set_xlim([565, 590])
-        ax3.set_ylim([-0.002, max(freqYellow) + 0.01])
+        ax3.set_ylim([-0.002, max(freqYellow) + 0.02])
         ax3.yaxis.set_label_coords(-0.2, 0.5)
         
         plt.tight_layout()
         firsthalf = '../../bps10.github.com/presentations/static/figures/'
         secondhalf = 'colorModel/uniqueHues_LMcomparison.png'
+        if Volbrecht1997:
+            secondhalf = 'colorModel/uniqueHues_LMcomparison_Volbrecht.png'
+            ax2.legend(['Volbrecht 1999', 'predicted'])
+            plt.rc('legend',**{'fontsize': 14})
         plt.savefig(firsthalf + secondhalf)
         plt.show()
         
@@ -426,7 +440,7 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
                      FirstStage['wavelen']['endWave']])
     ax1.set_ylabel('activity')
     ax1.yaxis.set_label_coords(-0.2, 0.5)
-    #ax1.set_ylim([-20, 30])
+    ax1.set_ylim([-0.20, 0.21])
     ax1.text(0.95, 0.95, '25% L', fontsize=16, 
         horizontalalignment='right',
         verticalalignment='top',
@@ -447,7 +461,7 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
                      FirstStage['wavelen']['endWave']])
     ax2.set_ylabel('activity')
     ax2.yaxis.set_label_coords(-0.2, 0.5)
-    #ax2.set_ylim([-20, 30])
+    ax2.set_ylim([-0.20, 0.21])
     ax2.text(0.95, 0.95, '50% L', fontsize=16, 
         horizontalalignment='right',
         verticalalignment='top',
@@ -469,13 +483,17 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
                      FirstStage['wavelen']['endWave']])
     ax3.set_ylabel('activity')
     ax3.yaxis.set_label_coords(-0.2, 0.5)
-    #ax3.set_ylim([-20, 30])
+    ax3.set_ylim([-0.20, 0.21])
     ax3.text(0.95, 0.95, '75% L', fontsize=16, 
         horizontalalignment='right',
         verticalalignment='top',
         transform=ax3.transAxes)
 
     plt.tight_layout()
+    firsthalf = '../../bps10.github.com/presentations/static/figures/'
+    secondhalf = 'colorModel/PercentL.png'
+    plt.savefig(firsthalf + secondhalf)
+        
     plt.show()      
     
     if plotUniqueHues:
@@ -503,6 +521,6 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
 
 if __name__ == '__main__':
     color = colorModel()
-    color.getCarroll_LMratios()
-    #plotModel(plotSpecSens=False, plotCurveFamily=True, plotUniqueHues=False)
+    color.getCarroll_LMratios(Volbrecht1997=True)
+    plotModel(plotSpecSens=False, plotCurveFamily=True, plotUniqueHues=False)
     #model.rectify()
