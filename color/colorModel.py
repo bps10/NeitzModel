@@ -239,25 +239,63 @@ class colorModel():
         self.carroll = np.genfromtxt('static/data/Carroll2002_lmRatios.txt', 
                             delimiter='\t', dtype=None, skip_header=0, 
                             names=True)
+        self.genModel()
+        self.findUniqueHues()
+        green, yellow = [], []
+        for subject in self.carroll['L']:
+            green.append(np.interp(subject, self.uniqueHues['LMratio'], 
+                              self.uniqueHues['green']))
+            yellow.append(np.interp(subject, self.uniqueHues['LMratio'], 
+                              self.uniqueHues['yellow']))
+                              
         BINS = np.arange(0, 101, 5)
+        BINS_G = np.arange(490, 560, 5)
+        BINS_Y = np.arange(565, 590, 2)
         freq, bins = plt.histogram(self.carroll['L'], bins=BINS)
+        freqGreen, bins = plt.histogram(green, bins=BINS_G)
+        freqYellow, bins = plt.histogram(yellow, bins=BINS_Y)
         
-        fig = plt.figure(figsize=(8, 6))
-        ax1 = fig.add_subplot(111)
-    
+        fig = plt.figure(figsize=(8.5, 11))
+        ax1 = fig.add_subplot(311)
+        ax2 = fig.add_subplot(312)
+        ax3 = fig.add_subplot(313)
+        
         pf.AxisFormat()
         pf.TufteAxis(ax1, ['left', 'bottom'], Nticks=[5, 5])
+        pf.TufteAxis(ax2, ['left', 'bottom'], Nticks=[5, 5])
+        pf.TufteAxis(ax3, ['left', 'bottom'], Nticks=[5, 5])
         
-        bins, freq = pf.histOutline(freq / sum(freq), bins)
-        ax1.plot(bins, freq,
-                'k', linewidth=3)
-
+        BINS, freq = pf.histOutline(freq / sum(freq), BINS)
+        BINS_G, freqGreen = pf.histOutline(freqGreen / sum(freqGreen), BINS_G)
+        BINS_Y, freqYellow = pf.histOutline(freqYellow / sum(freqYellow), 
+                                            BINS_Y)
+        print freqGreen, freqYellow
+        ax1.plot(BINS, freq, 'k', linewidth=3)
+        ax2.plot(BINS_G, freqGreen, 'g', linewidth=3)
+        ax3.plot(BINS_Y, freqYellow, 'y', linewidth=3)     
+          
         ax1.set_xlim([0, 100])
-        ax1.set_ylim([-0.002, max(freq)])
+        ax1.set_ylim([-0.002, max(freq) + 0.01])
         ax1.set_ylabel('proportion')
         ax1.set_xlabel('%L v M')
         ax1.yaxis.set_label_coords(-0.2, 0.5)
+        
+        ax2.set_ylabel('proportion')
+        ax2.set_xlabel('unique green (nm)')
+        ax2.set_xlim([490, 560])
+        ax2.set_ylim([-0.002, max(freqGreen) + 0.01])
+        ax2.yaxis.set_label_coords(-0.2, 0.5)
+        
+        ax3.set_ylabel('proportion')
+        ax3.set_xlabel('unique yellow (nm)')        
+        ax3.set_xlim([565, 590])
+        ax3.set_ylim([-0.002, max(freqYellow) + 0.01])
+        ax3.yaxis.set_label_coords(-0.2, 0.5)
+        
         plt.tight_layout()
+        firsthalf = '../../bps10.github.com/presentations/static/figures/'
+        secondhalf = 'colorModel/uniqueHues_LMcomparison.png'
+        plt.savefig(firsthalf + secondhalf)
         plt.show()
         
     def returnFirstStage(self):
@@ -464,6 +502,7 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
         plt.show()
 
 if __name__ == '__main__':
-        
-    plotModel(plotSpecSens=False, plotCurveFamily=True, plotUniqueHues=True)
+    color = colorModel()
+    color.getCarroll_LMratios()
+    #plotModel(plotSpecSens=False, plotCurveFamily=True, plotUniqueHues=False)
     #model.rectify()
