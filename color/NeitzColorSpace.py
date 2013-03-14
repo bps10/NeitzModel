@@ -272,14 +272,14 @@ class colorSpace(object):
         s2_xyz[:, :2] = s2_xy
         s2_xyz[:, 2] = s2_z
 
-        self._genJuddVos2Neitz()
+        jv, spec = self._genJuddVos2Neitz()
         yv_matrix = np.dot(np.linalg.inv(self.JuddVos_Neitz_lights),
                         (self.JuddVos_Neitz_transMatrix))
                         
         sub1_Neitz = np.dot(yv_matrix, s1_xyz.T).T                     
         sub2_Neitz = np.dot(yv_matrix, s2_xyz.T).T
                         
-        return sub1_Neitz, sub2_Neitz        
+        return sub1_Neitz, sub2_Neitz, jv, spec
 
     def _genJuddVos2Neitz(self):
         '''
@@ -336,7 +336,9 @@ class colorSpace(object):
         #print conv
         print self.JuddVos_Neitz_transMatrix
         
-        foo1 = np.dot((self.JuddVos_Neitz_transMatrix), foo.T).T
+        jv = np.dot((self.JuddVos_Neitz_transMatrix), foo.T).T
+
+        '''
         cc = neitz * foo ** -1
         
         plt.figure()
@@ -351,16 +353,24 @@ class colorSpace(object):
 
         print ''
         print self.JuddVos_Neitz_transMatrix
+        '''
+        return jv, spec
         
     def plotKaiser(self):
         '''
         
+        
         '''
-        sub1_Neitz, sub2_Neitz = self.kaiser()
+        sub1_Neitz, sub2_Neitz, jv, spec = self.kaiser()
         print sub1_Neitz
         print sub2_Neitz
-        self._plotColorSpace()
         
+        neitz = False
+        if not neitz:
+            self._plotColorSpace(rVal=jv[:, 0], gVal=jv[:, 1], spec=spec)
+        else:
+            self._plotColorSpace()
+            
         self.cs_ax.plot(sub1_Neitz[:, 0], sub1_Neitz[:, 1], 'rx', 
                         markersize=8, linewidth=2)
         self.cs_ax.plot(sub2_Neitz[:, 0], sub2_Neitz[:, 1], 'bx',
@@ -616,21 +626,29 @@ class colorSpace(object):
         self.cs_ax.text(0.7, 1, deficit, fontsize=18)
         plt.show()                 
 
-    def _plotColorSpace(self):
+    def _plotColorSpace(self, rVal=None, gVal=None, spec=None):
         '''
-        '''
-        
+        '''      
         try:
             plt.__version__
         except NameError:
             import matplotlib.pylab as plt
+            
+        if rVal == None or gVal == None or spec == None:
+            rVal = self.rVal
+            gVal = self.gVal
+            spec = self.spectrum
+            downS = 10
+        else:
+            downS = 2
+
         
         fig = plt.figure()
         self.cs_ax = fig.add_subplot(111)
         pf.AxisFormat(FONTSIZE=10, TickSize=6)
         pf.centerAxes(self.cs_ax)
         
-        self.cs_ax.plot(self.rVal, self.gVal, 'k', linewidth=3.5)
+        self.cs_ax.plot(rVal, gVal, 'k', linewidth=3.5)
         
         # add equi-energy location to plot
         self.cs_ax.plot(1.0/3.0, 1.0/3.0, 'ko', markersize=5)
@@ -639,7 +657,7 @@ class colorSpace(object):
                             fontsize=14)
         
         # annotate plot
-        dat = zip(self.spectrum[::10], self.rVal[::10], self.gVal[::10])
+        dat = zip(spec[::downS], rVal[::downS], gVal[::downS])
         for text, X, Y in dat:
             if text > 460 and text < 630:
                 
