@@ -191,15 +191,27 @@ class colorSpace(object):
                             'deutan': deutan, 
                             'tritan': tritan, }
     
-    def find_testLightMatch(self, testLight=600):
+    def find_testLightMatch(self, testLight=600, R=None, G=None, B=None):
         '''
         '''
-        l_ = np.interp(testLight, self.spectrum, self.Lnorm)
-        m_ = np.interp(testLight, self.spectrum, self.Mnorm)
-        s_ = np.interp(testLight, self.spectrum, self.Snorm)
+        if R == None or G == None or B == None:
+            Lnorm = self.Lnorm
+            Mnorm = self.Mnorm
+            Snorm = self.Snorm
+        else:
+            Lnorm = R
+            Mnorm = G
+            Snorm = B
+            
+        l_ = np.interp(testLight, self.spectrum, Lnorm)
+        m_ = np.interp(testLight, self.spectrum, Mnorm)
+        s_ = np.interp(testLight, self.spectrum, Snorm)
 
-        rOut, gOut, bOut = self.find_rgb(LMS=np.array([l_, m_, s_]))
-
+        if R == None or G == None or B == None:
+            rOut, gOut, bOut = self.find_rgb(LMS=np.array([l_, m_, s_]))
+        else:
+            rOut, gOut, bOut = l_, m_, s_
+            
         return [rOut, gOut, bOut]        
     
     def find_testlightFromRG(self, r, g):
@@ -272,38 +284,26 @@ class colorSpace(object):
         s2_xyz[:, :2] = s2_xy
         s2_xyz[:, 2] = s2_z
 
-        jv, spec = self._genJuddVos2Neitz()
-        yv_matrix = np.dot(np.linalg.inv(self.JuddVos_Neitz_lights),
-                        (self.JuddVos_Neitz_transMatrix))
-                        
-        sub1_Neitz = np.dot(yv_matrix, s1_xyz.T).T                     
-        sub2_Neitz = np.dot(yv_matrix, s2_xyz.T).T
-                        
-        return sub1_Neitz, sub2_Neitz, jv, spec
+        jv = self._genJuddVos()
 
-    def _genJuddVos2Neitz(self):
+        sub1_Neitz = s1_xyz #np.dot(yv_matrix, s1_xyz.T).T                     
+        sub2_Neitz = s2_xyz #np.dot(yv_matrix, s2_xyz.T).T
+                        
+        return sub1_Neitz, sub2_Neitz, jv
+
+    def _genJuddVos(self):
         '''
         '''
+        try:
+            from scipy import interpolate as interp
+        except ImportError:
+            raise ImportError('Sorry cannot import scipy')
+            
         #lights = np.array([700, 546.1, 435.8])
         juddVos = np.genfromtxt('static/data/ciexyzjv.csv', delimiter=',')
         spec = juddVos[:, 0]
         juddVos = juddVos[:, 1:]
 
-        maxLambda = max(self.spectrum)
-        minLambda = min(self.spectrum)
-        ind0 = np.where(spec == minLambda)[0]
-        ind1 = np.where(spec == maxLambda)[0] + 1
-        juddVos = juddVos[ind0:ind1, :]
-        spec = spec[ind0:ind1]
-        
-        '''
-        conv = np.array([[0.49, 0.31, 0.20], 
-                  [0.17697, 0.8124, 0.01063],
-                  [0.00, 0.01, 0.99]]) * (1 / 0.01769)
-        juddVos = np.dot(np.linalg.inv(conv) , juddVos.T).T
-        '''
-
-        # convert Judd-Vos CMFs into Eq En xyz space
         juddVos[:, 0] *= 100. / sum(juddVos[:, 0]) 
         juddVos[:, 1] *= 100. / sum(juddVos[:, 1])
         juddVos[:, 2] *= 100. / sum(juddVos[:, 2])
@@ -312,62 +312,34 @@ class colorSpace(object):
                                             juddVos[:, 2])
         juddVos[:, 0], juddVos[:, 1], juddVos[:, 2] = r, g, b
 
-        step = spec[1] - spec[0]
-        neitz = np.array([self.rVal[::step], 
-                  self.gVal[::step],
-                  self.bVal[::step]]).T
-                  
-        self.JuddVos_Neitz_lights = np.array([
-            [np.interp(self.lights['l'], spec, juddVos[:, 0]),
-            np.interp(self.lights['m'], spec, juddVos[:, 0]),
-            np.interp(self.lights['s'], spec, juddVos[:, 0])],
+        L_spline = interp.splrep(spec, juddVos[:, 0], s=0)
+        M_spline = interp.splrep(spec, juddVos[:, 1], s=0)
+        S_spline = interp.splrep(spec, juddVos[:, 2], s=0)
+        L_interp = interp.splev(self.spectrum, L_spline, der=0)
+        M_interp = interp.splev(self.spectrum, M_spline, der=0)
+        S_interp = interp.splev(self.spectrum, S_spline, der=0)
 
-            [np.interp(self.lights['l'], spec, juddVos[:, 1]),
-            np.interp(self.lights['m'], spec, juddVos[:, 1]),
-            np.interp(self.lights['s'], spec, juddVos[:, 1])],
-
-            [np.interp(self.lights['l'], spec, juddVos[:, 2]),
-            np.interp(self.lights['m'], spec, juddVos[:, 2]),
-            np.interp(self.lights['s'], spec, juddVos[:, 2])]])
-
-        foo = np.dot(np.linalg.inv(self.JuddVos_Neitz_lights), juddVos.T).T
+        JVinterp = np.array([L_interp, M_interp, S_interp]).T      
         
-        self.JuddVos_Neitz_transMatrix = np.linalg.lstsq(foo, neitz)[0]
-        #print conv
-        print self.JuddVos_Neitz_transMatrix
-        
-        jv = np.dot((self.JuddVos_Neitz_transMatrix), foo.T).T
-
-        '''
-        cc = neitz * foo ** -1
-        
-        plt.figure()
-        plt.plot(foo1, 'b')
-        plt.plot(foo * cc, 'k', linewidth=2)
-        plt.plot(neitz, 'g')
-        plt.show()    
-            
-        plt.figure()
-        plt.plot(foo1[:,0], foo1[:,1])
-        plt.show() 
-
-        print ''
-        print self.JuddVos_Neitz_transMatrix
-        '''
-        return jv, spec
+        return JVinterp
         
     def plotKaiser(self):
         '''
         
-        
         '''
-        sub1_Neitz, sub2_Neitz, jv, spec = self.kaiser()
+        try:
+            from matplotlib.patches import Wedge
+        except ImportError:
+            raise ImportError('Sorry no patches module found')
+            
+        sub1_Neitz, sub2_Neitz, jv = self.kaiser()
         print sub1_Neitz
         print sub2_Neitz
         
         neitz = False
         if not neitz:
-            self._plotColorSpace(rVal=jv[:, 0], gVal=jv[:, 1], spec=spec)
+            self._plotColorSpace(rVal=jv[:, 0], gVal=jv[:, 1],
+                                 spec=self.spectrum)
         else:
             self._plotColorSpace()
             
@@ -375,8 +347,61 @@ class colorSpace(object):
                         markersize=8, linewidth=2)
         self.cs_ax.plot(sub2_Neitz[:, 0], sub2_Neitz[:, 1], 'bx',
                         markersize=8, linewidth=2)
+        self.cs_ax.plot([jv[-1, 0], jv[0, 0]], 
+                        [jv[-1, 1], jv[0, 1]], 'k-', linewidth=3)
+        self.cs_ax.set_xlabel('x', fontsize=10)
+        self.cs_ax.set_ylabel('y', fontsize=10)
+        self.cs_ax.set_ylim([0, 0.9])
+        self.cs_ax.set_xlim([-0.05, 0.8])
+        plt.tight_layout()
         plt.show()
+        
+        ## plot confusion lines
+        clip_area = Wedge((jv[0, 0], jv[0, 1]), r=10, theta1=0, theta2=360)
+        CIEcopunctuals = {'deutan': np.array([1.10, -0.1, 0.1]),
+                          'protan': np.array([0.753, 0.247, 0]), 
+                          'tritan': np.array([0.17, 0, 0.83]),
+                          }
+        for deficit in CIEcopunctuals:
+            self._plotColorSpace(rVal=jv[:, 0], gVal=jv[:, 1],
+                                     spec=self.spectrum)     
+            
+            print deficit, ': ', CIEcopunctuals[deficit]
+            
+            if deficit.lower() == 'deutan' or deficit.lower() == 'protan':
+                lambdas = [420, 460, 470, 480, 490, 500, 515,]
+            elif deficit.lower() == 'tritan':
+                lambdas = [420, 460, 480, 500, 520, 535, 545, 555,
+                           570, 585, 600, 625, 700]
+            
+            self.cs_ax.plot(CIEcopunctuals[deficit][0],
+                            CIEcopunctuals[deficit][1], 'ko', markersize=8)
+            for lam in lambdas:
+                R, G, B = jv[:, 0], jv[:, 1], jv[:, 2]
+                self.cs_ax.plot([self.find_testLightMatch(lam, 
+                                    R, G, B)[0],
+                                 CIEcopunctuals[deficit][0]],
 
+                                [self.find_testLightMatch(lam, 
+                                    R, G, B)[1],
+                                 CIEcopunctuals[deficit][1]],
+                                'k-', linewidth=1) 
+                self.cs_ax.plot([jv[-1, 0], jv[0, 0]], 
+                        [jv[-1, 1], jv[0, 1]], 'k-', linewidth=3)
+                        
+                self.cs_ax.set_clip_path(clip_area)
+                
+            self.cs_ax.set_ylim([-0.12, 0.9])
+            self.cs_ax.set_xlim([-0.05, 1.15])          
+            self.cs_ax.set_xlabel('x', fontsize=10)
+            self.cs_ax.set_ylabel('y', fontsize=10)
+            self.cs_ax.text(0.8, 1, deficit, fontsize=18,
+                            horizontalalignment='right',
+                            verticalalignment='top',
+                            transform=self.cs_ax.transAxes)
+            plt.tight_layout()
+            plt.show()    
+        
     def _EEcmf(self, r_, g_, b_):   
         '''
         '''
@@ -633,21 +658,34 @@ class colorSpace(object):
             plt.__version__
         except NameError:
             import matplotlib.pylab as plt
-            
+        
+        downSamp = 10
+        
         if rVal == None or gVal == None or spec == None:
             rVal = self.rVal
             gVal = self.gVal
             spec = self.spectrum
-            downS = 10
+            
+            JuddV = False
+            offset = 0.02
+            turn = [500, 510]
         else:
-            downS = 2
+            JuddV = True
+            offset = 0.01
+            turn = [510, 520]
 
         
         fig = plt.figure()
         self.cs_ax = fig.add_subplot(111)
         pf.AxisFormat(FONTSIZE=10, TickSize=6)
-        pf.centerAxes(self.cs_ax)
         
+        if not JuddV:
+            pf.AxisFormat(FONTSIZE=10, TickSize=6)
+            pf.centerAxes(self.cs_ax)
+        if JuddV:
+            pf.AxisFormat(FONTSIZE=10, TickSize=8)
+            pf.centerAxes(self.cs_ax)
+            
         self.cs_ax.plot(rVal, gVal, 'k', linewidth=3.5)
         
         # add equi-energy location to plot
@@ -657,20 +695,20 @@ class colorSpace(object):
                             fontsize=14)
         
         # annotate plot
-        dat = zip(spec[::downS], rVal[::downS], gVal[::downS])
+        dat = zip(spec[::downSamp], rVal[::downSamp], gVal[::downSamp])
         for text, X, Y in dat:
             if text > 460 and text < 630:
                 
-                if text <= 500:
-                    self.cs_ax.scatter(X - 0.02, Y, marker='_', s=150, c='k')
+                if text <= turn[0]:
+                    self.cs_ax.scatter(X - offset, Y, marker='_', s=150, c='k')
                     self.cs_ax.annotate(s='{}'.format(int(text)),
                                         xy=(X, Y),
                                         xytext=(-15, -5),
                                         ha='right',
                                         textcoords='offset points', 
                                         fontsize=16)
-                elif text > 500 and text <= 510:
-                    self.cs_ax.scatter(X, Y + 0.02, marker='|', s=150, c='k')
+                elif text > turn[0] and text <= turn[1]:
+                    self.cs_ax.scatter(X, Y + offset, marker='|', s=150, c='k')
                     self.cs_ax.annotate(s='{}'.format(int(text)),
                                         xy=(X, Y),
                                         xytext=(5, 20),
@@ -678,7 +716,7 @@ class colorSpace(object):
                                         textcoords='offset points',
                                         fontsize=16)
                 else:
-                    self.cs_ax.scatter(X + 0.02, Y, marker='_', s=150, c='k')
+                    self.cs_ax.scatter(X + offset, Y, marker='_', s=150, c='k')
                     self.cs_ax.annotate(s='{}'.format(int(text)),
                                         xy=(X, Y),
                                         xytext=(45, -5),
