@@ -235,7 +235,7 @@ class colorModel():
         self.lensMacula = 10 ** (lens[:ind, 1] + macula[:ind, 1])
 
     def getCarroll_LMratios(self, Volbrecht1997=False, returnVals=False, 
-                            plot=True, savefigs=False):
+                            plot=True, savefigs=True):
         '''Creates a dictionary like object.
         '''
         self.carroll = np.genfromtxt('static/data/Carroll2002_lmRatios.txt', 
@@ -243,12 +243,14 @@ class colorModel():
                             names=True)
         self.genModel()
         self.findUniqueHues()
-        green, yellow = [], []
+        green, yellow, blue = [], [], []
         for subject in self.carroll['L']:
             green.append(np.interp(subject, self.uniqueHues['LMratio'], 
                               self.uniqueHues['green']))
             yellow.append(np.interp(subject, self.uniqueHues['LMratio'], 
                               self.uniqueHues['yellow']))
+            blue.append(np.interp(subject, self.uniqueHues['LMratio'],
+                                  self.uniqueHues['blue']))
                               
         BINS = np.arange(0, 101, 5)
         if Volbrecht1997:
@@ -258,37 +260,49 @@ class colorModel():
         else:
             BINS_G = np.arange(490, 560, 5)
             
-        BINS_Y = np.arange(565, 590, 2)
+        BINS_Y = np.arange(514, 590, 3)
+        BINS_B = np.arange(460, 536, 3)
+        
         freq, bins = np.histogram(self.carroll['L'], bins=BINS)
         freqGreen, bins =np.histogram(green, bins=BINS_G)
         freqYellow, bins = np.histogram(yellow, bins=BINS_Y)
+        freqBlue, bins = np.histogram(blue, bins=BINS_B)
                                             
         if plot:
-            fig = plt.figure(figsize=(8.5, 11))
+            fig = plt.figure(figsize=(8.5, 11.5))
             ax1 = fig.add_subplot(311)
             ax2 = fig.add_subplot(312)
             ax3 = fig.add_subplot(313)
+            ax4 = ax3.twiny()
             
             pf.AxisFormat()
             pf.TufteAxis(ax1, ['left', 'bottom'], Nticks=[5, 5])
             pf.TufteAxis(ax2, ['left', 'bottom'], Nticks=[5, 5])
             pf.TufteAxis(ax3, ['left', 'bottom'], Nticks=[5, 5])
+            pf.TufteAxis(ax4, ['left', 'bottom'], Nticks=[5, 5])
+            #ax4.spines['bottom'].set_visible(True)
+            #ax3.spines['bottom'].set_visible(True)
+            ax3.spines['bottom'].set_position(('outward', 55))
+            
             
             BINS, freq = pf.histOutline(freq / sum(freq), BINS)
             BINS_Gout, freqGreen = pf.histOutline(freqGreen / sum(freqGreen), 
                                                BINS_G)
-            BINS_Y, freqYellow = pf.histOutline(freqYellow / sum(freqYellow), 
-                                                BINS_Y)
-            print freqGreen, freqYellow
+            BINS_Yout, freqYellow = pf.histOutline(
+                                    freqYellow / sum(freqYellow), BINS_Y)
+            BINS_Bout, freqBlue = pf.histOutline(freqBlue / sum(freqBlue), 
+                                                BINS_B)
+            print freqGreen, freqYellow, freqBlue
             ax1.plot(BINS, freq, 'k', linewidth=3)
             
             if Volbrecht1997:
                 binV, freqV = pf.histOutline(volb['count'] / sum(
                                             volb['count']), BINS_G)
-                ax2.plot(binV, freqV, 'k', linewidth=3)
+                ax2.plot(binV, freqV, 'k--', linewidth=3)
                 
             ax2.plot(BINS_Gout, freqGreen, 'g', linewidth=3)
-            ax3.plot(BINS_Y, freqYellow, 'y', linewidth=3)     
+            ax3.plot(BINS_Yout, freqYellow, 'y', linewidth=3) 
+            ax4.plot(BINS_Bout, freqBlue, 'b', linewidth=3) 
               
             ax1.set_xlim([0, 100])
             ax1.set_ylim([-0.002, max(freq) + 0.01])
@@ -306,12 +320,18 @@ class colorModel():
             ax2.yaxis.set_label_coords(-0.2, 0.5)
             
             ax3.set_ylabel('proportion')
-            ax3.set_xlabel('unique yellow (nm)')        
-            ax3.set_xlim([565, 590])
-            ax3.set_ylim([-0.002, max(freqYellow) + 0.02])
+            #ax3.set_xlabel('unique yellow (nm)')        
+            #ax3.set_xlim([460, 590])
+            ax3.tick_params(axis='x', colors='y')
+            ax3.set_ylim([-0.005, max(max(freqBlue), max(freqYellow)) + 0.02])
             ax3.yaxis.set_label_coords(-0.2, 0.5)
             
+            ax4.tick_params(axis='x', colors = 'b')
+            ax3.set_xlabel('unique blue, yellow (nm)')
+            
+            
             plt.tight_layout()
+            
             firsthalf = '../../bps10.github.com/presentations/static/figures/'
             secondhalf = 'colorModel/uniqueHues_LMcomparison.png'
             if Volbrecht1997:
@@ -577,6 +597,6 @@ if __name__ == '__main__':
     #optimizeUniqueHues()
     color = colorModel()
     color.getCarroll_LMratios(Volbrecht1997=True)
-    plotModel(plotSpecSens=False, plotCurveFamily=True, 
-              plotUniqueHues=True, savefigs=True)
+    #plotModel(plotSpecSens=False, plotCurveFamily=True, 
+    #          plotUniqueHues=True, savefigs=True)
     #model.rectify()
