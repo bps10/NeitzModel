@@ -190,6 +190,18 @@ class colorSpace(object):
         self.copunctuals = {'protan': protan, 
                             'deutan': deutan, 
                             'tritan': tritan, }
+
+    def nullSpace(self):
+        '''
+        '''
+        self.find_copunctuals()
+        conv = np.array([self.copunctuals['protan'],
+                         self.copunctuals['deutan'],
+                         self.copunctuals['tritan']])
+        null = np.dot(conv, self.CMFs)
+        plt.figure()
+        plt.plot(null[0,:],null[1,:])
+        plt.show()
     
     def find_testLightMatch(self, testLight=600):
         '''
@@ -673,5 +685,6 @@ if __name__ == '__main__':
     #color.plotColorSpace()
     #color.plotConfusionLines()
     #color.plotBYsystem(PRINT=True)
-    color.plotKaiser()
+    #color.plotKaiser()
+    color.nullSpace()
     
