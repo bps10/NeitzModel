@@ -165,7 +165,41 @@ class colorSpace(object):
 
         if PRINT == True:
             print self.convMatrix
+
+    def genTetraConvMatrix(self, Xpeak):
+        '''
+        '''
+        minspec = min(self.spectrum)
+        maxspec = max(self.spectrum)
+        Xsens = spectsens(Xpeak, 0.5, 'anti-log', minspec, 
+                                         maxspec, 1)[0]
+        Xresponse = Xsens / self.filters * self.spectrum
+        Xnorm = Xresponse / np.max(Xresponse)
         
+        lights = {'l': 600, 'm': 510, 's': 420, 'x': 720}
+        convMatrix = np.array([
+            [np.interp(lights['l'], self.spectrum, self.Lnorm),
+            np.interp(lights['m'], self.spectrum, self.Lnorm),
+            np.interp(lights['s'], self.spectrum, self.Lnorm),
+            np.interp(lights['x'], self.spectrum, self.Lnorm)],
+
+            [np.interp(lights['l'], self.spectrum, self.Mnorm),
+            np.interp(lights['m'], self.spectrum, self.Mnorm),
+            np.interp(lights['s'], self.spectrum, self.Mnorm),
+            np.interp(lights['x'], self.spectrum, self.Mnorm)],
+
+            [np.interp(lights['l'], self.spectrum, self.Snorm),
+            np.interp(lights['m'], self.spectrum, self.Snorm),
+            np.interp(lights['s'], self.spectrum, self.Snorm),
+            np.interp(lights['x'], self.spectrum, self.Snorm)],
+
+            [np.interp(lights['l'], self.spectrum, Xnorm),
+            np.interp(lights['m'], self.spectrum, Xnorm),
+            np.interp(lights['s'], self.spectrum, Xnorm),
+            np.interp(lights['x'], self.spectrum, Xnorm)]])
+        return convMatrix
+
+            
     def CMFtoEE_CMF(self):
         '''
         '''
@@ -191,7 +225,7 @@ class colorSpace(object):
                             'deutan': deutan, 
                             'tritan': tritan, }
 
-    def nullSpace(self):
+    def copunctualSpace(self):
         '''
         '''
         self.find_copunctuals()
@@ -199,10 +233,87 @@ class colorSpace(object):
                          self.copunctuals['deutan'],
                          self.copunctuals['tritan']])
         null = np.dot(conv, self.CMFs)
-        plt.figure()
-        plt.plot(null[0,:],null[1,:])
+        
+        self._plotColorSpace(null[0, :], null[1, :], self.spectrum)
         plt.show()
-    
+
+
+    def trichromaticAnalysis(self, Lmax=560, Smax=417):
+        '''
+        '''
+        M_lamMax = []
+        volume = []
+        for i in range(420, 561):
+            M_lamMax.append(i)
+            self.genLMS('Neitz', [Lmax, i, Smax])
+            self.genConvMatrix()
+            volume.append(np.linalg.det(self.convMatrix))
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        pf.AxisFormat()
+        pf.TufteAxis(ax, ['left', 'bottom'], Nticks=[5, 5])
+        
+        ax.plot(M_lamMax, volume, 'k', linewidth=3)
+        
+        ind = np.where(np.array(M_lamMax) == 530)[0]
+        ax.plot(M_lamMax[ind], volume[ind], 'g+', markersize=15, 
+                markeredgewidth=3)
+        
+        ax.set_ylabel('color space volume')        
+        ax.set_xlabel('$M_{\lambda_{max}}$') 
+        
+        ax.text(0.5, 0.5, 
+            ('$L_{\lambda_{max}}$: ' + str(Lmax) + 'nm\n$S_{\lambda_{max}}$: '
+            + str(Smax) + 'nm'), 
+            fontsize=20, 
+            horizontalalignment='center',
+            verticalalignment='top',
+            transform=ax.transAxes)
+        
+        plt.tight_layout()
+        plt.show()
+
+    def tetrachromaticAnalysis(self, Lmax=560, Mmax=530, Smax=417):
+        '''
+        '''
+        X_lamMax = []
+        volume = []
+        self.genLMS('Neitz', [Lmax, Mmax, Smax])
+        
+        for i in range(400, 850):
+            X_lamMax.append(i)
+            
+            tetraSystem = self.genTetraConvMatrix(i)
+            volume.append(np.linalg.det(tetraSystem))
+            '''
+            if i % 10 == 0:
+                print i, 'nm, rank: ', np.linalg.matrix_rank(tetraSystem)
+            '''
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        pf.AxisFormat()
+        pf.TufteAxis(ax, ['left', 'bottom'], Nticks=[5, 5])
+        
+        ax.plot(X_lamMax, volume, 'k', linewidth=3)
+        
+        ind = np.where(np.array(X_lamMax) == 495)[0]
+        ax.semilogy(X_lamMax[ind], volume[ind], 'g+', markersize=15, 
+                markeredgewidth=3)
+        
+        ax.set_ylabel('color space volume')        
+        ax.set_xlabel('$X_{\lambda_{max}}$') 
+        
+        ax.text(0.2, 0.95, 
+            ('$L_{\lambda_{max}}$: ' + str(Lmax) + 'nm\n$M_{\lambda_{max}}$: '
+            + str(Mmax) + 'nm\n$S_{\lambda_{max}}$: ' + str(Smax) + 'nm'), 
+            fontsize=20, 
+            horizontalalignment='center',
+            verticalalignment='top',
+            transform=ax.transAxes)
+        
+        plt.tight_layout()
+        plt.show()
+        
     def find_testLightMatch(self, testLight=600, R=None, G=None, B=None):
         '''
         '''
@@ -759,5 +870,7 @@ if __name__ == '__main__':
     #color.plotConfusionLines()
     #color.plotBYsystem(PRINT=True)
     #color.plotKaiser()
-    color.nullSpace()
+    #color.trichromaticAnalysis()
+    color.tetrachromaticAnalysis()
+    #color.copunctualSpace()
     
