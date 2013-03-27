@@ -7,16 +7,17 @@ from math import factorial
 
 from spectsens import spectsens
 import PlottingFun as pf
-from sompy import SOM
+#from sompy import SOM
 
 
 class colorModel():
     '''
     '''
-    def __init__(self):
+    def __init__(self, q=1.307):
 
         self.test = False
         self.step = 1
+        self._q = q
         self.getStockmanFilter()
 
     def findConeRatios(self, fracLvM, fracS=None):
@@ -29,7 +30,7 @@ class colorModel():
             self.sRatio = fracS
         self.lRatio = (1 - self.sRatio) * (fracLvM)
         self.mRatio = (1 - self.sRatio) * (1 - fracLvM)
-
+        
         if self.test:
             if round(self.sRatio + self.mRatio + self.lRatio, 7) != 1.0:
                 print 'lms ratios: ', self.sRatio, self.mRatio, self.lRatio
@@ -65,7 +66,7 @@ class colorModel():
                 BY = temp['mCenter']
 
                 if i == 0:
-                    uniqueGreen.append(543)
+                    uniqueGreen.append(555)
                     uniqueRed.append(592)
                 else:
                     zero_cross = np.where(np.diff(np.sign(RG)))[0]
@@ -74,7 +75,7 @@ class colorModel():
 
                 if i == 100:
                     uniqueBlue.append(474)
-                    uniqueYellow.append(555)
+                    uniqueYellow.append(575)
                 else:
                     zero_cross = np.where(np.diff(np.sign(BY)))[0]
                     uniqueBlue.append(lambdas[zero_cross[0]])
@@ -103,14 +104,19 @@ class colorModel():
                             StartWavelength=startLambda,
                             OpticalDensity=0.5,
                             EndWavelength=endLambda, Res=step)[0]
+        L_cones /= self.lensMacula
+        
         M_cones = spectsens(LambdaMax=self.maxSens['m'], Output=Out,
                             StartWavelength=startLambda,
                             OpticalDensity=0.5,
                             EndWavelength=endLambda, Res=step)[0]
+        M_cones /= self.lensMacula
+        
         S_cones = spectsens(LambdaMax=self.maxSens['s'], Output=Out,
                             StartWavelength=startLambda,
                             OpticalDensity=0.4,
                             EndWavelength=endLambda, Res=step)[0]
+        S_cones /= self.lensMacula
 
         self.FirstStage = {
             'lambdas': lambdas,
@@ -136,7 +142,7 @@ class colorModel():
         for s in range(0, 101, self.step):
             for m in range(0, 101, self.step):
                 for l in range(0, 101, self.step): 
-                    if (l + m + s) == 100:
+                    if (l + m + s) == 100 and s == 5:
                         percent = {'s': s, 'm': m, 'l': l, }
                         lmsV_L = self.optimizeChannel(cones, percent,
                                                         Center=L_cones)
@@ -155,7 +161,10 @@ class colorModel():
         binom = lambda k, n, p: ((factorial(n) /
                                 (factorial(k) * factorial(n - k))
                                     * (p ** k)) * (1 - p) ** (n - k))
-            
+        #trinom = lambda l, m, s, L, M, S: (
+        #                    factorial(L + M + S) /
+        #                    (factorial(L) * factorial(M) * factorial(S)) *
+        #                    (l ** L * m ** M * s ** S))
         lCenterProb = self.lRatio / (self.mRatio + self.lRatio)
         
         self.ThirdStage = {
@@ -164,13 +173,17 @@ class colorModel():
             }
         p = 0
         for i in self.SecondStage['lmsV_L']:
+            
             lNum = self.SecondStage['percent'][i]['l']
             mNum = self.SecondStage['percent'][i]['m']
             #sNum = self.SecondStage['percent'][i]['s']
 
             probSur = (#gauss(self.sRatio * 100, sNum / self.step, 0.5) *
+                        #trinom(self.lRatio, self.mRatio, self.sRatio,
+                        #   lNum, mNum, sNum)
                         binom(lNum, lNum + mNum, lCenterProb)                         
                             )
+                            
             self.SecondStage['percent'][i]['probSurround'] = probSur
             
             p += probSur
@@ -180,7 +193,7 @@ class colorModel():
             self.ThirdStage['mCenter'] += mCenter * (1 - lCenterProb) * probSur 
             self.ThirdStage['lCenter'] += lCenter * (lCenterProb) * probSur 
 
-        print self.sRatio, lCenterProb, 'prob :', p
+        #print self.sRatio, lCenterProb, 'prob :', p
 
         if self.test:
             if round(p, 2) != 1.0:
@@ -190,10 +203,12 @@ class colorModel():
     def optimizeChannel(self, cones, percent, Center):
         '''
         '''
-        fun = lambda w, Center: (w * ((percent['s'] / 100. * cones['s']) +
-                                    (percent['m'] / 100. * cones['m']) +
-                                    (percent['l'] / 100. * cones['l'])) -
-                                 Center) / self.lensMacula
+        m_ = percent['m'] / (percent['m'] + percent['l'])
+        l_ = percent['l'] / (percent['m'] + percent['l'])
+        fun = lambda w, Center: (w * (self._q * cones['s'] +
+                                    m_ * cones['m'] +
+                                    l_ * cones['l']) -
+                                 Center)
 
         # error function to minimize
         err = lambda w, Center: (fun(w, Center)).sum()
@@ -219,6 +234,119 @@ class colorModel():
                                        #just take upto a given index (750nm)
         self.lensMacula = 10 ** (lens[:ind, 1] + macula[:ind, 1])
 
+    def getCarroll_LMratios(self, Volbrecht1997=False, returnVals=False, 
+                            plot=True, savefigs=True):
+        '''Creates a dictionary like object.
+        '''
+        self.carroll = np.genfromtxt('static/data/Carroll2002_lmRatios.txt', 
+                            delimiter='\t', dtype=None, skip_header=0, 
+                            names=True)
+        self.genModel()
+        self.findUniqueHues()
+        green, yellow, blue = [], [], []
+        for subject in self.carroll['L']:
+            green.append(np.interp(subject, self.uniqueHues['LMratio'], 
+                              self.uniqueHues['green']))
+            yellow.append(np.interp(subject, self.uniqueHues['LMratio'], 
+                              self.uniqueHues['yellow']))
+            blue.append(np.interp(subject, self.uniqueHues['LMratio'],
+                                  self.uniqueHues['blue']))
+                              
+        BINS = np.arange(0, 101, 5)
+        if Volbrecht1997:
+            BINS_G = np.arange(488, 564, 3)
+            volb = np.genfromtxt('static/data/Volbrecht1997.txt', delimiter='\t',
+                          dtype=None, skip_header=0, names=True)
+        else:
+            BINS_G = np.arange(490, 560, 5)
+            
+        BINS_Y = np.arange(514, 590, 3)
+        BINS_B = np.arange(460, 536, 3)
+        
+        freq, bins = np.histogram(self.carroll['L'], bins=BINS)
+        freqGreen, bins =np.histogram(green, bins=BINS_G)
+        freqYellow, bins = np.histogram(yellow, bins=BINS_Y)
+        freqBlue, bins = np.histogram(blue, bins=BINS_B)
+                                            
+        if plot:
+            fig = plt.figure(figsize=(8.5, 11.5))
+            ax1 = fig.add_subplot(311)
+            ax2 = fig.add_subplot(312)
+            ax3 = fig.add_subplot(313)
+            ax4 = ax3.twiny()
+            
+            pf.AxisFormat()
+            pf.TufteAxis(ax1, ['left', 'bottom'], Nticks=[5, 5])
+            pf.TufteAxis(ax2, ['left', 'bottom'], Nticks=[5, 5])
+            pf.TufteAxis(ax3, ['left', 'bottom'], Nticks=[5, 5])
+            pf.TufteAxis(ax4, ['left', 'bottom'], Nticks=[5, 5])
+            #ax4.spines['bottom'].set_visible(True)
+            #ax3.spines['bottom'].set_visible(True)
+            ax3.spines['bottom'].set_position(('outward', 55))
+            
+            
+            BINS, freq = pf.histOutline(freq / sum(freq), BINS)
+            BINS_Gout, freqGreen = pf.histOutline(freqGreen / sum(freqGreen), 
+                                               BINS_G)
+            BINS_Yout, freqYellow = pf.histOutline(
+                                    freqYellow / sum(freqYellow), BINS_Y)
+            BINS_Bout, freqBlue = pf.histOutline(freqBlue / sum(freqBlue), 
+                                                BINS_B)
+            print freqGreen, freqYellow, freqBlue
+            ax1.plot(BINS, freq, 'k', linewidth=3)
+            
+            if Volbrecht1997:
+                binV, freqV = pf.histOutline(volb['count'] / sum(
+                                            volb['count']), BINS_G)
+                ax2.plot(binV, freqV, 'k--', linewidth=3)
+                
+            ax2.plot(BINS_Gout, freqGreen, 'g', linewidth=3)
+            ax3.plot(BINS_Yout, freqYellow, 'y', linewidth=3) 
+            ax4.plot(BINS_Bout, freqBlue, 'b', linewidth=3) 
+              
+            ax1.set_xlim([0, 100])
+            ax1.set_ylim([-0.002, max(freq) + 0.01])
+            ax1.set_ylabel('proportion')
+            ax1.set_xlabel('% L v M')
+            ax1.yaxis.set_label_coords(-0.2, 0.5)
+            
+            ax2.set_ylabel('proportion')
+            ax2.set_xlabel('unique green (nm)')
+            ax2.set_xlim([490, 560])
+            if Volbrecht1997:
+                ax2.set_ylim([-0.002, max(max(freqV), max(freqGreen)) + 0.01])
+            else:
+                ax2.set_ylim([-0.002, max(freqGreen) + 0.01])
+            ax2.yaxis.set_label_coords(-0.2, 0.5)
+            
+            ax3.set_ylabel('proportion')
+            #ax3.set_xlabel('unique yellow (nm)')        
+            #ax3.set_xlim([460, 590])
+            ax3.tick_params(axis='x', colors='y')
+            ax3.set_ylim([-0.005, max(max(freqBlue), max(freqYellow)) + 0.02])
+            ax3.yaxis.set_label_coords(-0.2, 0.5)
+            
+            ax4.tick_params(axis='x', colors = 'b')
+            ax3.set_xlabel('unique blue, yellow (nm)')
+            
+            
+            plt.tight_layout()
+            
+            firsthalf = '../../bps10.github.com/presentations/static/figures/'
+            secondhalf = 'colorModel/uniqueHues_LMcomparison.png'
+            if Volbrecht1997:
+                secondhalf = 'colorModel/uniqueHues_LMcomparison_Volbrecht.png'
+                ax2.legend(['Volbrecht 1999', 'predicted'])
+                plt.rc('legend',**{'fontsize': 12})
+            if savefigs:
+                plt.savefig(firsthalf + secondhalf)
+            plt.show()
+        
+        if returnVals:
+            return freq, freqGreen, freqYellow, (volb['count'] / 
+                                                    sum(volb['count']))
+                
+        
     def returnFirstStage(self):
         '''
         '''
@@ -239,14 +367,35 @@ class colorModel():
         '''
         return self.uniqueHues
 
+def optimizeUniqueHues():
+    '''
+    '''
+    error= []
+    parameter = np.arange(1.0, 1.5, 0.01)
+    simY = np.array([0, 0, 0, 0.1, 0.4, 0,4, 0.1, 0, 0, 0, 0])
+    for q in parameter:
+        color = colorModel(q=q)
+        freq, freqGreen, freqYellow, freqV = color.getCarroll_LMratios(
+                            Volbrecht1997=True, returnVals=True, plot=False)
+        
+        error.append(np.sum(np.sqrt((freqGreen - freqV) ** 2)) 
+                    +  np.sum(np.sqrt((freqYellow - simY) ** 2))
+                    )
+                    
+        if q % 0.1 < 10e-6:
+            print q
+            
+    print min(error), np.argmin(error), parameter[np.argmin(error)]
+    np.savetxt('errors.txt', np.array([parameter, error]).T, delimiter='\t')
+        
 
 def plotModel(plotSpecSens=False, plotCurveFamily=False,
-              plotUniqueHues=False):
+              plotUniqueHues=False, savefigs=False):
     """Plot cone spectral sensitivies and first stage predictions.
     """
-
+    fracLvM = 0.75
     model = colorModel()
-    model.genModel(ConeRatio={'fracLvM': 0.25, 's': 0.05, })
+    model.genModel(ConeRatio={'fracLvM': fracLvM, 's': 0.05, })
     FirstStage = model.returnFirstStage()   
     
     if plotSpecSens:
@@ -267,7 +416,13 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
                       FirstStage['wavelen']['endWave']])
         ax1.set_ylabel('sensitivity')
         ax1.yaxis.set_label_coords(-0.2, 0.5)
+        ax1.set_xlabel('wavelength (nm)')
+        
         plt.tight_layout()
+        if savefigs:
+            firsthalf = '../../bps10.github.com/presentations/static/figures/'
+            secondhalf = 'colorModel/specSens.png'
+            plt.savefig(firsthalf + secondhalf)
         plt.show()
 
     if plotCurveFamily:
@@ -301,9 +456,10 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
         print thresh
         
         for i in SecondStage['lmsV_L']:
-            if i % 50 == 0 or SecondStage['percent'][i][
+            if i % 2 == 0 or SecondStage['percent'][i][
                     'probSurround'] >= thresh:
                 if SecondStage['percent'][i]['probSurround'] >= thresh:
+                    print SecondStage['percent'][i]
                     ax1.plot(FirstStage['lambdas'], SecondStage['lmsV_M'][i],
                             c=(0,0,1), linewidth=1, alpha=0.25)
                     ax2.plot(FirstStage['lambdas'], SecondStage['lmsV_L'][i],
@@ -322,15 +478,22 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
 
         ax1.set_ylabel('sensitivity')
         ax2.set_ylabel('sensitivity')
-
+        ax2.set_xlabel('wavelength (nm)')
+        
         plt.tight_layout()
+        if savefigs:
+            firsthalf = '../../bps10.github.com/presentations/static/figures/'
+            secondhalf = 'colorModel/familyLMS_' + str(int(
+                                                fracLvM * 100)) + 'L.png'
+            plt.savefig(firsthalf + secondhalf)
         plt.show()
 
     fig = plt.figure(figsize=(8.5, 11))
     ax1 = fig.add_subplot(311)
     ax2 = fig.add_subplot(312)
     ax3 = fig.add_subplot(313)
-
+    
+    model.genModel(ConeRatio={'fracLvM': 0.25, 's': 0.05, })
     ThirdStage = model.returnThirdStage()
     
     pf.AxisFormat()     
@@ -345,7 +508,7 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
                      FirstStage['wavelen']['endWave']])
     ax1.set_ylabel('activity')
     ax1.yaxis.set_label_coords(-0.2, 0.5)
-    ax1.set_ylim([-20, 30])
+    ax1.set_ylim([-0.20, 0.21])
     ax1.text(0.95, 0.95, '25% L', fontsize=16, 
         horizontalalignment='right',
         verticalalignment='top',
@@ -366,7 +529,7 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
                      FirstStage['wavelen']['endWave']])
     ax2.set_ylabel('activity')
     ax2.yaxis.set_label_coords(-0.2, 0.5)
-    ax2.set_ylim([-20, 30])
+    ax2.set_ylim([-0.20, 0.21])
     ax2.text(0.95, 0.95, '50% L', fontsize=16, 
         horizontalalignment='right',
         verticalalignment='top',
@@ -388,13 +551,19 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
                      FirstStage['wavelen']['endWave']])
     ax3.set_ylabel('activity')
     ax3.yaxis.set_label_coords(-0.2, 0.5)
-    ax3.set_ylim([-20, 30])
+    ax3.set_ylim([-0.20, 0.21])
     ax3.text(0.95, 0.95, '75% L', fontsize=16, 
         horizontalalignment='right',
         verticalalignment='top',
         transform=ax3.transAxes)
-
+    ax3.set_xlabel('wavelength (nm)')
+    
     plt.tight_layout()
+    if savefigs:
+        firsthalf = '../../bps10.github.com/presentations/static/figures/'
+        secondhalf = 'colorModel/PercentL.png'
+        plt.savefig(firsthalf + secondhalf)
+        
     plt.show()      
     
     if plotUniqueHues:
@@ -405,8 +574,8 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
         pf.AxisFormat()
         pf.TufteAxis(ax1, ['left', 'bottom'], Nticks=[5, 5])
 
-        ax1.plot(UniqueHues['LMratio'], UniqueHues['red'],
-                'r', linewidth=3)
+        #ax1.plot(UniqueHues['LMratio'], UniqueHues['red'],
+        #        'r', linewidth=3)
         ax1.plot(UniqueHues['LMratio'], UniqueHues['green'],
                 'g', linewidth=3)
         ax1.plot(UniqueHues['LMratio'], UniqueHues['blue'],
@@ -414,13 +583,20 @@ def plotModel(plotSpecSens=False, plotCurveFamily=False,
         ax1.plot(UniqueHues['LMratio'], UniqueHues['yellow'],
                 'y', linewidth=3)
 
-        ax1.set_ylabel('wavelength ($\\mu$m)')
-        ax1.set_xlabel('percent L vs M')
+        ax1.set_ylabel('wavelength (nm)')
+        ax1.set_xlabel('% L vs M')
 
         plt.tight_layout()
+        if savefigs:
+            firsthalf = '../../bps10.github.com/presentations/static/figures/'
+            secondhalf = 'colorModel/uniqueHues.png'
+            plt.savefig(firsthalf + secondhalf)
         plt.show()
 
 if __name__ == '__main__':
-        
-    plotModel(plotSpecSens=False, plotCurveFamily=True, plotUniqueHues=True)
+    #optimizeUniqueHues()
+    color = colorModel()
+    color.getCarroll_LMratios(Volbrecht1997=True)
+    #plotModel(plotSpecSens=False, plotCurveFamily=True, 
+    #          plotUniqueHues=True, savefigs=True)
     #model.rectify()
