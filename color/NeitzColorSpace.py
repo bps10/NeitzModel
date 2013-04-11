@@ -225,19 +225,6 @@ class colorSpace(object):
                             'deutan': deutan, 
                             'tritan': tritan, }
 
-    def copunctualSpace(self):
-        '''
-        '''
-        self.find_copunctuals()
-        conv = np.array([self.copunctuals['protan'],
-                         self.copunctuals['deutan'],
-                         self.copunctuals['tritan']])
-        null = np.dot(conv, self.CMFs)
-        
-        self._plotColorSpace(null[0, :], null[1, :], self.spectrum)
-        plt.show()
-
-
     def trichromaticAnalysis(self, Lmax=560, Smax=417):
         '''
         '''
@@ -280,11 +267,11 @@ class colorSpace(object):
         volume = []
         self.genLMS('Neitz', [Lmax, Mmax, Smax])
         
-        for i in range(400, 850):
+        for i in range(300, 850):
             X_lamMax.append(i)
             
             tetraSystem = self.genTetraConvMatrix(i)
-            volume.append(np.linalg.det(tetraSystem))
+            volume.append(abs(np.linalg.det(tetraSystem)))
             '''
             if i % 10 == 0:
                 print i, 'nm, rank: ', np.linalg.matrix_rank(tetraSystem)
@@ -604,8 +591,106 @@ class colorSpace(object):
         outX = x[i - 1] + ((x[i] - x[i - 1]) * (0 - t0 / (t1 - t0)))
         outY = func(outX)
         return [outX, outY]
-            
 
+    def genXYZ(self):
+        '''
+        '''
+        rgb = np.array([self.rVal, self.gVal, self.bVal])
+        
+        self.find_copunctuals()
+        conv = np.array([self.copunctuals['protan'],
+                         self.copunctuals['deutan'],
+                         self.copunctuals['tritan']])
+
+        conv = np.linalg.inv(conv.T)
+        
+        print conv
+        conv = conv / np.sum(conv, 1)[:, np.newaxis]
+        print conv
+
+        
+        xyz = np.dot(conv, rgb)
+        plt.figure()
+        plt.plot(xyz[0, :])
+        plt.plot(xyz[1, :])
+        plt.plot(xyz[2, :])
+        
+        self.X = xyz[0, :]
+        self.Y = xyz[1, :]
+        self.Z = xyz[2, :]
+        
+        self._plotColorSpace(xyz[0, :], xyz[1, :], self.spectrum)
+        plt.show()            
+
+    def plotConeSpace(self):
+        '''
+        '''
+        self._plotColorSpace(self.Lnorm, self.Mnorm, self.spectrum)
+        plt.show()
+
+
+    def genXYZold(self):
+        '''
+        '''
+        #LMS = np.array([self.Lnorm, self.Mnorm, self.Snorm])
+        #cmfs = np.dot(np.linalg.inv(self.convMatrix), LMS)
+
+        R = self.rVal
+        G = self.gVal
+        B = self.bVal
+        
+        x_r = np.interp(self.lights['l'], self.spectrum, R)
+        y_r = np.interp(self.lights['l'], self.spectrum, G)
+        x_g = np.interp(self.lights['m'], self.spectrum, R)
+        y_g = np.interp(self.lights['m'], self.spectrum, G)
+        x_b = np.interp(self.lights['s'], self.spectrum, R)
+        y_b = np.interp(self.lights['s'], self.spectrum, G)
+
+        print x_r, y_r, x_g, y_g, x_b, y_b
+        
+        conv = np.array([[x_r / y_r, 1.0, (1 - x_r - y_r) / y_r],
+                         [x_g / y_g, 1.0, (1 - x_g - y_g) / y_g],
+                         [0, 1.0, 0]])
+        print conv
+        #s = np.dot(np.linalg.inv(conv), np.array([1./3., 1./3., 1./3.]))
+        #print s
+        #M = conv * np.array([1./3., 1./3., 1./3.])
+        #print M
+        ''' 
+        convXYZ= np.array([[0.5,  0.31, 0.20],
+                           [0.16, 0.38, 0.03],
+                           [0.90, 0.91, 0.99]]) / 0.57697
+                 
+        convXYZ = np.array([[2.768892, 1.751748, 1.130160],
+                            [1.000000, 4.590700, 0.060100],
+                            [0,        0.056508, 5.594292]])'''
+                            
+        rgb = np.array([R, G, B])
+        XYZ = np.dot(conv, rgb)
+        self.X = XYZ[0, :]
+        self.Y = XYZ[1, :]
+        self.Z = XYZ[2, :]
+        
+        plt.figure()
+        plt.plot(self.X, self.Y)
+        plt.show()
+
+    def plotLUV(self):
+        '''
+        '''
+        self.genXYZ()
+        u = 4 * self.X / (-2 * self.X + 12 * self.Y + 3)
+        v = 9 * self.Y / (-2 * self.X + 12 * self.Y + 3)
+        
+        ind1 = np.where(self.spectrum == 420)[0]
+        ind2 = np.where(self.spectrum == 700)[0]
+        spectrum = self.spectrum[ind1:ind2+1]
+        u = u[ind1:ind2]
+        v = v[ind1:ind2]
+        
+        self._plotColorSpace(u, v, spectrum, ee=False)
+        plt.show()
+        
     def plotCompare(self, compare=['stockman', 'stockSpecSens', 'neitz']):
         '''
             '''
@@ -774,7 +859,7 @@ class colorSpace(object):
         self.cs_ax.text(0.7, 1, deficit, fontsize=18)
         plt.show()                 
 
-    def _plotColorSpace(self, rVal=None, gVal=None, spec=None):
+    def _plotColorSpace(self, rVal=None, gVal=None, spec=None, ee=True):
         '''
         '''      
         try:
@@ -792,6 +877,7 @@ class colorSpace(object):
             JuddV = False
             offset = 0.02
             turn = [500, 510]
+            
         else:
             JuddV = True
             offset = 0.01
@@ -812,10 +898,12 @@ class colorSpace(object):
         self.cs_ax.plot(rVal, gVal, 'k', linewidth=3.5)
         
         # add equi-energy location to plot
-        self.cs_ax.plot(1.0/3.0, 1.0/3.0, 'ko', markersize=5)
-        self.cs_ax.annotate(s='{}'.format('E'), xy=(1./3.,1./3.), xytext=(2,8),
-                            ha='right', textcoords='offset points',
-                            fontsize=14)
+        if ee:
+            self.cs_ax.plot(1.0/3.0, 1.0/3.0, 'ko', markersize=5)
+            self.cs_ax.annotate(s='{}'.format('E'), xy=(1./3.,1./3.),
+                                xytext=(2,8),
+                                ha='right', textcoords='offset points',
+                                fontsize=14)
         
         # annotate plot
         dat = zip(spec[::downSamp], rVal[::downSamp], gVal[::downSamp])
@@ -871,6 +959,6 @@ if __name__ == '__main__':
     #color.plotBYsystem(PRINT=True)
     #color.plotKaiser()
     #color.trichromaticAnalysis()
-    color.tetrachromaticAnalysis()
-    #color.copunctualSpace()
-    
+    #color.tetrachromaticAnalysis()
+    #color.plotConeSpace()
+    color.plotLUV()

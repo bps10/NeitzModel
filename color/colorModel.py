@@ -13,7 +13,7 @@ import PlottingFun as pf
 class colorModel():
     '''
     '''
-    def __init__(self, q=1.307):
+    def __init__(self, q=1.300):
 
         self.test = False
         self.step = 1
@@ -235,7 +235,7 @@ class colorModel():
         self.lensMacula = 10 ** (lens[:ind, 1] + macula[:ind, 1])
 
     def getCarroll_LMratios(self, Volbrecht1997=False, returnVals=False, 
-                            plot=True, savefigs=True):
+                            plot=True, savefigs=False):
         '''Creates a dictionary like object.
         '''
         self.carroll = np.genfromtxt('static/data/Carroll2002_lmRatios.txt', 
@@ -251,7 +251,11 @@ class colorModel():
                               self.uniqueHues['yellow']))
             blue.append(np.interp(subject, self.uniqueHues['LMratio'],
                                   self.uniqueHues['blue']))
-                              
+
+        print 'green: ', np.mean(green), np.std(green)
+        print 'yellow: ', np.mean(yellow), np.std(yellow)
+        print 'blue: ', np.mean(blue), np.std(blue)   
+                           
         BINS = np.arange(0, 101, 5)
         if Volbrecht1997:
             BINS_G = np.arange(488, 564, 3)
@@ -280,8 +284,7 @@ class colorModel():
             pf.TufteAxis(ax2, ['left', 'bottom'], Nticks=[5, 5])
             pf.TufteAxis(ax3, ['left', 'bottom'], Nticks=[5, 5])
             pf.TufteAxis(ax4, ['left', 'bottom'], Nticks=[5, 5])
-            #ax4.spines['bottom'].set_visible(True)
-            #ax3.spines['bottom'].set_visible(True)
+
             ax3.spines['bottom'].set_position(('outward', 55))
             
             
@@ -292,15 +295,18 @@ class colorModel():
                                     freqYellow / sum(freqYellow), BINS_Y)
             BINS_Bout, freqBlue = pf.histOutline(freqBlue / sum(freqBlue), 
                                                 BINS_B)
-            print freqGreen, freqYellow, freqBlue
+
             ax1.plot(BINS, freq, 'k', linewidth=3)
             
             if Volbrecht1997:
                 binV, freqV = pf.histOutline(volb['count'] / sum(
                                             volb['count']), BINS_G)
-                ax2.plot(binV, freqV, 'k--', linewidth=3)
+                ax2.plot(binV, freqV, c='0.8', linewidth=3,
+                                 label='Volbrecht 1997')
+                ax2.fill_between(binV, freqV, 0, color='0.8')
                 
-            ax2.plot(BINS_Gout, freqGreen, 'g', linewidth=3)
+            ax2.plot(BINS_Gout, freqGreen, 'g', linewidth=3,
+                     label='predicted')
             ax3.plot(BINS_Yout, freqYellow, 'y', linewidth=3) 
             ax4.plot(BINS_Bout, freqBlue, 'b', linewidth=3) 
               
@@ -328,15 +334,18 @@ class colorModel():
             
             ax4.tick_params(axis='x', colors = 'b')
             ax3.set_xlabel('unique blue, yellow (nm)')
-            
-            
+
+            #ax4.spines['bottom'].set_visible(True)
+            #ax3.spines['bottom'].set_visible(True)      
+            #ax4.set_visible(True)
+            ax3.edgecolor  = 'y'
             plt.tight_layout()
             
             firsthalf = '../../bps10.github.com/presentations/static/figures/'
             secondhalf = 'colorModel/uniqueHues_LMcomparison.png'
             if Volbrecht1997:
                 secondhalf = 'colorModel/uniqueHues_LMcomparison_Volbrecht.png'
-                ax2.legend(['Volbrecht 1999', 'predicted'])
+                ax2.legend()
                 plt.rc('legend',**{'fontsize': 12})
             if savefigs:
                 plt.savefig(firsthalf + secondhalf)
@@ -390,10 +399,10 @@ def optimizeUniqueHues():
         
 
 def plotModel(plotSpecSens=False, plotCurveFamily=False,
-              plotUniqueHues=False, savefigs=False):
+              plotUniqueHues=False, savefigs=False, fracLvM=0.75):
     """Plot cone spectral sensitivies and first stage predictions.
     """
-    fracLvM = 0.75
+    
     model = colorModel()
     model.genModel(ConeRatio={'fracLvM': fracLvM, 's': 0.05, })
     FirstStage = model.returnFirstStage()   
@@ -597,6 +606,6 @@ if __name__ == '__main__':
     #optimizeUniqueHues()
     color = colorModel()
     color.getCarroll_LMratios(Volbrecht1997=True)
-    #plotModel(plotSpecSens=False, plotCurveFamily=True, 
-    #          plotUniqueHues=True, savefigs=True)
+    plotModel(plotSpecSens=False, plotCurveFamily=False, 
+              plotUniqueHues=False, savefigs=True)
     #model.rectify()
