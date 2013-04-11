@@ -15,29 +15,8 @@ class colorSpace(object):
     def __init__(self, stim='wright', fundamental='neitz', 
                  LMSpeaks=[559.0, 530.0, 421.0]):
         
-        if (stim.lower() != 'wright' and stim.lower() != 'stiles and burch' 
-            and stim.lower() != 'cie 1931'):
-            print 'Sorry, stim light not understood, using wright'
-            stim = 'wright' 
-
-        if stim.lower() == 'wright':
-            self.lights = {
-                            'l': 650.0,
-                            'm': 530.0,
-                            's': 460.0,
-                           }
-        if stim.lower() == 'stiles and burch':
-            self.lights = {'l': 645.0, 
-                           'm': 526.0, 
-                           's': 444.0, }
-
-        if stim.lower() == 'cie 1931':
-            self.lights = {'l': 700.0, 
-                           'm': 546.1, 
-                           's': 435.8, }
-                           
         self.params = {'lights': stim.lower, }
-        
+        self.setLights(stim)
         self.genStockmanFilter()
         self.genLMS(fundamental, LMSpeaks)
         self.genConvMatrix()
@@ -109,16 +88,6 @@ class colorSpace(object):
         self.Mnorm = Mresponse / np.max(Mresponse)
         self.Snorm = Sresponse / np.max(Sresponse)
 
-    def TrichromaticEquation(self, r, g, b):
-        '''
-        '''
-        rgb = r + g + b
-        r_ = r / rgb
-        g_ = g / rgb
-        b_ = b / rgb
-        
-        return r_, g_, b_
-
     def genStockmanFilter(self, maxLambda=770):
         '''
         '''
@@ -133,19 +102,6 @@ class colorSpace(object):
         self.spectrum = spectrum[:ind+1]
         
         self.filters = 10.0 ** (lens[:ind + 1, 1] +  macula[:ind + 1, 1])
-        
-    def LMStoCMFs(self):
-        '''
-        '''
-        
-        LMSsens = np.array([self.Lnorm, self.Mnorm, self.Snorm])
-        self.CMFs = np.dot(np.linalg.inv(self.convMatrix), LMSsens)
-
-        #save sums for later normalization:            
-        Rnorm = sum(self.CMFs[0, :])
-        Gnorm = sum(self.CMFs[1, :])
-        Bnorm = sum(self.CMFs[2, :])
-        self.EEfactors = {'r': Rnorm, 'g': Gnorm, 'b': Bnorm, }
         
     def genConvMatrix(self, PRINT=False):
         '''
@@ -199,7 +155,109 @@ class colorSpace(object):
             np.interp(lights['x'], self.spectrum, Xnorm)]])
         return convMatrix
 
+
+    def genXYZ(self, plot=True):
+        '''
+        '''
+        rgb = np.array([self.rVal, self.gVal, self.bVal])
+        JuddVos = self._genJuddVos()
+
+        convXYZ = np.array([[2.768892, 1.751748, 1.130160],
+                            [1.000000, 4.590700, 0.060100],
+                            [0,        0.056508, 5.594292]])
+         
+        neitzXYZ = np.dot(convXYZ, rgb)             
+        xyzM = np.linalg.lstsq(neitzXYZ.T, JuddVos)[0]
+        xyz = np.dot(xyzM, neitzXYZ)
+
+        self.X = xyz[0, :]
+        self.Y = xyz[1, :]
+        self.Z = xyz[2, :]
+        
+        if plot:
+            self._plotColorSpace(self.X, self.Y, self.spectrum)
+            plt.show()        
+
+    def genKaiser(self, neitz=False):
+        '''
+        '''
+        kaiser = np.genfromtxt('static/data/kaiser1987.csv', delimiter=",")
+        # sort by subject:
+        subj1 = np.where(kaiser[:, 3] == 1)
+        subj2 = np.where(kaiser[:, 3] == 2)
+        s1_xy = kaiser[subj1, :2][0]
+        s2_xy = kaiser[subj2, :2][0]
+        # solve for z:
+        s1_z = 1.0 - (s1_xy[:, 0] + s1_xy[:, 1])
+        s2_z = 1.0 - (s2_xy[:, 0] + s2_xy[:, 1])
+        # combine:
+        s1_xyz = np.zeros((len(s1_xy), 3))
+        s1_xyz[:, :2] = s1_xy
+        s1_xyz[:, 2] = s1_z
+        s2_xyz = np.zeros((len(s2_xy), 3))
+        s2_xyz[:, :2] = s2_xy
+        s2_xyz[:, 2] = s2_z
+
+        jv = self._genJuddVos()
+
+        if neitz:
+            JV_Neitz_transMatrix = self._genJuddVos2Neitz(jv)
+
+            sub1_Neitz = np.dot(JV_Neitz_transMatrix, s1_xyz.T).T 
+            sub2_Neitz = np.dot(JV_Neitz_transMatrix, s2_xyz.T).T
+        else:
+            sub1_Neitz = s1_xyz                     
+            sub2_Neitz = s2_xyz 
+                        
+        return sub1_Neitz, sub2_Neitz, jv        
+
+    def setLights(self, stim):
+        '''
+        '''
+        if (stim.lower() != 'wright' and stim.lower() != 'stiles and burch' 
+            and stim.lower() != 'cie 1931'):
+            print 'Sorry, stim light not understood, using wright'
+            stim = 'wright' 
             
+        if stim.lower() == 'wright':
+            self.lights = {
+                            'l': 650.0,
+                            'm': 530.0,
+                            's': 460.0,
+                           }
+        if stim.lower() == 'stiles and burch':
+            self.lights = {'l': 645.0, 
+                           'm': 526.0, 
+                           's': 444.0, }
+
+        if stim.lower() == 'cie 1931':
+            self.lights = {'l': 700.0, 
+                           'm': 546.1, 
+                           's': 435.8, }
+
+    def TrichromaticEquation(self, r, g, b):
+        '''
+        '''
+        rgb = r + g + b
+        r_ = r / rgb
+        g_ = g / rgb
+        b_ = b / rgb
+        
+        return r_, g_, b_
+        
+    def LMStoCMFs(self):
+        '''
+        '''
+        
+        LMSsens = np.array([self.Lnorm, self.Mnorm, self.Snorm])
+        self.CMFs = np.dot(np.linalg.inv(self.convMatrix), LMSsens)
+
+        #save sums for later normalization:            
+        Rnorm = sum(self.CMFs[0, :])
+        Gnorm = sum(self.CMFs[1, :])
+        Bnorm = sum(self.CMFs[2, :])
+        self.EEfactors = {'r': Rnorm, 'g': Gnorm, 'b': Bnorm, }
+                           
     def CMFtoEE_CMF(self):
         '''
         '''
@@ -208,6 +266,42 @@ class colorSpace(object):
                                         self.CMFs[1, :], 
                                         self.CMFs[2, :])
 
+    def lambda2BY(self, lam, verbose=False):
+        '''
+        '''
+        r, g, b = self.find_testLightMatch(lam)
+        line = self._lineEq(r, g)
+        self.find_copunctuals()
+        imagLine = self._lineEq(self.copunctuals['deutan'][0], 
+                                self.copunctuals['deutan'][1],
+                                self.copunctuals['tritan'][0], 
+                                self.copunctuals['tritan'][1])
+        xpoints = np.arange(self.copunctuals['tritan'][0], 
+                            self.copunctuals['deutan'][0], 0.01)
+        ypoints = imagLine(xpoints)
+        neutPoint = self._findDataIntercept(xpoints, ypoints, line)
+
+        if verbose is True:
+            return neutPoint, [r, g]
+        else:
+            return neutPoint
+            
+    def BY2lambda(self, propS, propM, verbose=False):
+        '''
+        '''
+        l = 0
+        m = -propM
+        s = propS
+        
+        r, g, b = self.find_rgb(np.array([l, m, s]))
+        line = self._lineEq(r, g)
+        neutPoint = self._findDataIntercept(self.rVal, self.gVal, line)
+        
+        if verbose is True:
+            return neutPoint, [r, g]
+        else:
+            return neutPoint
+            
     def EE_CMFtoRGB(self):
         '''
         '''
@@ -224,6 +318,64 @@ class colorSpace(object):
         self.copunctuals = {'protan': protan, 
                             'deutan': deutan, 
                             'tritan': tritan, }
+        
+    def find_testLightMatch(self, testLight=600, R=None, G=None, B=None):
+        '''
+        '''
+        if R == None or G == None or B == None:
+            Lnorm = self.Lnorm
+            Mnorm = self.Mnorm
+            Snorm = self.Snorm
+        else:
+            Lnorm = R
+            Mnorm = G
+            Snorm = B
+            
+        l_ = np.interp(testLight, self.spectrum, Lnorm)
+        m_ = np.interp(testLight, self.spectrum, Mnorm)
+        s_ = np.interp(testLight, self.spectrum, Snorm)
+
+        if R == None or G == None or B == None:
+            rOut, gOut, bOut = self.find_rgb(LMS=np.array([l_, m_, s_]))
+        else:
+            rOut, gOut, bOut = l_, m_, s_
+            
+        return [rOut, gOut, bOut]        
+    
+    def find_testlightFromRG(self, r, g):
+        '''
+        '''
+        err = lambda r, g, lam: ((r - self.rVal[lam])**2 + (g - 
+                                self.gVal[lam])**2)
+        i = 0
+        startE = err(r, g, i)
+        error = True
+        try:
+            while error:
+                e = err(r, g, i)
+                
+                if startE < e and e < 10e-2:
+                    error = False
+                else:
+                    startE = e
+                    i += 1
+                    
+            #linear interpolate between points
+            t0 = err(r, g, i)
+            t1 = err(r, g, i + 1)
+            outLam = self.spectrum[i] + (0 - t0 / (t1 - t0))
+            return outLam
+        except IndexError:
+            raise IndexError('Pure light not found. Are you sure the [r, g] \
+                            coords lie on the spectral line?')
+        
+    def find_rgb(self, LMS):
+        '''
+        '''
+        cmf = np.dot(np.linalg.inv(self.convMatrix), LMS)
+        cmf[0], cmf[1], cmf[2] = self._EEcmf(cmf[0], cmf[1], cmf[2])
+        out = self.TrichromaticEquation(cmf[0], cmf[1], cmf[2])
+        return out
 
     def trichromaticAnalysis(self, Lmax=560, Smax=417):
         '''
@@ -300,218 +452,7 @@ class colorSpace(object):
         
         plt.tight_layout()
         plt.show()
-        
-    def find_testLightMatch(self, testLight=600, R=None, G=None, B=None):
-        '''
-        '''
-        if R == None or G == None or B == None:
-            Lnorm = self.Lnorm
-            Mnorm = self.Mnorm
-            Snorm = self.Snorm
-        else:
-            Lnorm = R
-            Mnorm = G
-            Snorm = B
-            
-        l_ = np.interp(testLight, self.spectrum, Lnorm)
-        m_ = np.interp(testLight, self.spectrum, Mnorm)
-        s_ = np.interp(testLight, self.spectrum, Snorm)
 
-        if R == None or G == None or B == None:
-            rOut, gOut, bOut = self.find_rgb(LMS=np.array([l_, m_, s_]))
-        else:
-            rOut, gOut, bOut = l_, m_, s_
-            
-        return [rOut, gOut, bOut]        
-    
-    def find_testlightFromRG(self, r, g):
-        '''
-        '''
-        err = lambda r, g, lam: ((r - self.rVal[lam])**2 + (g - 
-                                self.gVal[lam])**2)
-        i = 0
-        startE = err(r, g, i)
-        error = True
-        try:
-            while error:
-                e = err(r, g, i)
-                
-                if startE < e and e < 10e-2:
-                    error = False
-                else:
-                    startE = e
-                    i += 1
-                    
-            #linear interpolate between points
-            t0 = err(r, g, i)
-            t1 = err(r, g, i + 1)
-            outLam = self.spectrum[i] + (0 - t0 / (t1 - t0))
-            return outLam
-        except IndexError:
-            raise IndexError('Pure light not found. Are you sure the [r, g] \
-                            coords lie on the spectral line?')
-        
-    def find_rgb(self, LMS):
-        '''
-        '''
-        cmf = np.dot(np.linalg.inv(self.convMatrix), LMS)
-        cmf[0], cmf[1], cmf[2] = self._EEcmf(cmf[0], cmf[1], cmf[2])
-        out = self.TrichromaticEquation(cmf[0], cmf[1], cmf[2])
-        return out
-        
-    def returnConvMat(self):
-        '''
-        '''
-        return self.convMatrix
-    
-    def returnCMFs(self):
-        '''
-        '''
-        return {'cmfs': self.CMFs, 'wavelengths': self.spectrum, }
-    
-    def return_rgb(self):
-        '''
-        '''
-        return {'r': self.rVal, 'g': self.gVal, 'b': self.bVal, }
-        
-    def kaiser(self):
-        '''
-        '''
-        kaiser = np.genfromtxt('static/data/kaiser1987.csv', delimiter=",")
-        # sort by subject:
-        subj1 = np.where(kaiser[:, 3] == 1)
-        subj2 = np.where(kaiser[:, 3] == 2)
-        s1_xy = kaiser[subj1, :2][0]
-        s2_xy = kaiser[subj2, :2][0]
-        # solve for z:
-        s1_z = 1.0 - (s1_xy[:, 0] + s1_xy[:, 1])
-        s2_z = 1.0 - (s2_xy[:, 0] + s2_xy[:, 1])
-        # combine:
-        s1_xyz = np.zeros((len(s1_xy), 3))
-        s1_xyz[:, :2] = s1_xy
-        s1_xyz[:, 2] = s1_z
-        s2_xyz = np.zeros((len(s2_xy), 3))
-        s2_xyz[:, :2] = s2_xy
-        s2_xyz[:, 2] = s2_z
-
-        jv = self._genJuddVos()
-
-        sub1_Neitz = s1_xyz #np.dot(yv_matrix, s1_xyz.T).T                     
-        sub2_Neitz = s2_xyz #np.dot(yv_matrix, s2_xyz.T).T
-                        
-        return sub1_Neitz, sub2_Neitz, jv
-
-    def _genJuddVos(self):
-        '''
-        '''
-        try:
-            from scipy import interpolate as interp
-        except ImportError:
-            raise ImportError('Sorry cannot import scipy')
-            
-        #lights = np.array([700, 546.1, 435.8])
-        juddVos = np.genfromtxt('static/data/ciexyzjv.csv', delimiter=',')
-        spec = juddVos[:, 0]
-        juddVos = juddVos[:, 1:]
-
-        juddVos[:, 0] *= 100. / sum(juddVos[:, 0]) 
-        juddVos[:, 1] *= 100. / sum(juddVos[:, 1])
-        juddVos[:, 2] *= 100. / sum(juddVos[:, 2])
-        r, g, b = self.TrichromaticEquation(juddVos[:, 0], 
-                                            juddVos[:, 1],
-                                            juddVos[:, 2])
-        juddVos[:, 0], juddVos[:, 1], juddVos[:, 2] = r, g, b
-
-        L_spline = interp.splrep(spec, juddVos[:, 0], s=0)
-        M_spline = interp.splrep(spec, juddVos[:, 1], s=0)
-        S_spline = interp.splrep(spec, juddVos[:, 2], s=0)
-        L_interp = interp.splev(self.spectrum, L_spline, der=0)
-        M_interp = interp.splev(self.spectrum, M_spline, der=0)
-        S_interp = interp.splev(self.spectrum, S_spline, der=0)
-
-        JVinterp = np.array([L_interp, M_interp, S_interp]).T      
-        
-        return JVinterp
-        
-    def plotKaiser(self):
-        '''
-        
-        '''
-        try:
-            from matplotlib.patches import Wedge
-        except ImportError:
-            raise ImportError('Sorry no patches module found')
-            
-        sub1_Neitz, sub2_Neitz, jv = self.kaiser()
-        print sub1_Neitz
-        print sub2_Neitz
-        
-        neitz = False
-        if not neitz:
-            self._plotColorSpace(rVal=jv[:, 0], gVal=jv[:, 1],
-                                 spec=self.spectrum)
-        else:
-            self._plotColorSpace()
-            
-        self.cs_ax.plot(sub1_Neitz[:, 0], sub1_Neitz[:, 1], 'rx', 
-                        markersize=8, linewidth=2)
-        self.cs_ax.plot(sub2_Neitz[:, 0], sub2_Neitz[:, 1], 'bx',
-                        markersize=8, linewidth=2)
-        self.cs_ax.plot([jv[-1, 0], jv[0, 0]], 
-                        [jv[-1, 1], jv[0, 1]], 'k-', linewidth=3)
-        self.cs_ax.set_xlabel('x', fontsize=10)
-        self.cs_ax.set_ylabel('y', fontsize=10)
-        self.cs_ax.set_ylim([0, 0.9])
-        self.cs_ax.set_xlim([-0.05, 0.8])
-        plt.tight_layout()
-        plt.show()
-        
-        ## plot confusion lines
-        clip_area = Wedge((jv[0, 0], jv[0, 1]), r=10, theta1=0, theta2=360)
-        CIEcopunctuals = {'deutan': np.array([1.10, -0.1, 0.1]),
-                          'protan': np.array([0.753, 0.247, 0]), 
-                          'tritan': np.array([0.17, 0, 0.83]),
-                          }
-        for deficit in CIEcopunctuals:
-            self._plotColorSpace(rVal=jv[:, 0], gVal=jv[:, 1],
-                                     spec=self.spectrum)     
-            
-            print deficit, ': ', CIEcopunctuals[deficit]
-            
-            if deficit.lower() == 'deutan' or deficit.lower() == 'protan':
-                lambdas = [420, 460, 470, 480, 490, 500, 515,]
-            elif deficit.lower() == 'tritan':
-                lambdas = [420, 460, 480, 500, 520, 535, 545, 555,
-                           570, 585, 600, 625, 700]
-            
-            self.cs_ax.plot(CIEcopunctuals[deficit][0],
-                            CIEcopunctuals[deficit][1], 'ko', markersize=8)
-            for lam in lambdas:
-                R, G, B = jv[:, 0], jv[:, 1], jv[:, 2]
-                self.cs_ax.plot([self.find_testLightMatch(lam, 
-                                    R, G, B)[0],
-                                 CIEcopunctuals[deficit][0]],
-
-                                [self.find_testLightMatch(lam, 
-                                    R, G, B)[1],
-                                 CIEcopunctuals[deficit][1]],
-                                'k-', linewidth=1) 
-                self.cs_ax.plot([jv[-1, 0], jv[0, 0]], 
-                        [jv[-1, 1], jv[0, 1]], 'k-', linewidth=3)
-                        
-                self.cs_ax.set_clip_path(clip_area)
-                
-            self.cs_ax.set_ylim([-0.12, 0.9])
-            self.cs_ax.set_xlim([-0.05, 1.15])          
-            self.cs_ax.set_xlabel('x', fontsize=10)
-            self.cs_ax.set_ylabel('y', fontsize=10)
-            self.cs_ax.text(0.8, 1, deficit, fontsize=18,
-                            horizontalalignment='right',
-                            verticalalignment='top',
-                            transform=self.cs_ax.transAxes)
-            plt.tight_layout()
-            plt.show()    
-        
     def _EEcmf(self, r_, g_, b_):   
         '''
         '''
@@ -521,42 +462,6 @@ class colorSpace(object):
         b_ *= 100. / self.EEfactors['b']
         
         return [r_, g_, b_]
-
-    def lambda2BY(self, lam, verbose=False):
-        '''
-        '''
-        r, g, b = self.find_testLightMatch(lam)
-        line = self._lineEq(r, g)
-        self.find_copunctuals()
-        imagLine = self._lineEq(self.copunctuals['deutan'][0], 
-                                self.copunctuals['deutan'][1],
-                                self.copunctuals['tritan'][0], 
-                                self.copunctuals['tritan'][1])
-        xpoints = np.arange(self.copunctuals['tritan'][0], 
-                            self.copunctuals['deutan'][0], 0.01)
-        ypoints = imagLine(xpoints)
-        neutPoint = self._findDataIntercept(xpoints, ypoints, line)
-
-        if verbose is True:
-            return neutPoint, [r, g]
-        else:
-            return neutPoint
-            
-    def BY2lambda(self, propS, propM, verbose=False):
-        '''
-        '''
-        l = 0
-        m = -propM
-        s = propS
-        
-        r, g, b = self.find_rgb(np.array([l, m, s]))
-        line = self._lineEq(r, g)
-        neutPoint = self._findDataIntercept(self.rVal, self.gVal, line)
-        
-        if verbose is True:
-            return neutPoint, [r, g]
-        else:
-            return neutPoint
         
     def _lineEq(self, x1, y1, x2=None, y2=None):
         '''Return the equation of a line from a given point that will pass
@@ -590,37 +495,79 @@ class colorSpace(object):
         t1 = func(x[i]) - y[i]
         outX = x[i - 1] + ((x[i] - x[i - 1]) * (0 - t0 / (t1 - t0)))
         outY = func(outX)
-        return [outX, outY]
+        return [outX, outY]        
 
-    def genXYZ(self):
+    def _genJuddVos2Neitz(self, juddVos):
         '''
         '''
-        rgb = np.array([self.rVal, self.gVal, self.bVal])
+        neitz = np.array([self.rVal, self.gVal, self.bVal]).T
         
-        self.find_copunctuals()
-        conv = np.array([self.copunctuals['protan'],
-                         self.copunctuals['deutan'],
-                         self.copunctuals['tritan']])
+        JuddVos_Neitz_lights = np.array([
+            [np.interp(self.lights['l'], self.spectrum, juddVos[:, 0]),
+            np.interp(self.lights['m'], self.spectrum, juddVos[:, 0]),
+            np.interp(self.lights['s'], self.spectrum, juddVos[:, 0])],
 
-        conv = np.linalg.inv(conv.T)
-        
-        print conv
-        conv = conv / np.sum(conv, 1)[:, np.newaxis]
-        print conv
+            [np.interp(self.lights['l'], self.spectrum, juddVos[:, 1]),
+            np.interp(self.lights['m'], self.spectrum, juddVos[:, 1]),
+            np.interp(self.lights['s'], self.spectrum, juddVos[:, 1])],
 
+            [np.interp(self.lights['l'], self.spectrum, juddVos[:, 2]),
+            np.interp(self.lights['m'], self.spectrum, juddVos[:, 2]),
+            np.interp(self.lights['s'], self.spectrum, juddVos[:, 2])]])
+
+        foo = np.dot(np.linalg.inv(JuddVos_Neitz_lights), juddVos.T).T
         
-        xyz = np.dot(conv, rgb)
-        plt.figure()
-        plt.plot(xyz[0, :])
-        plt.plot(xyz[1, :])
-        plt.plot(xyz[2, :])
+        tempMat = np.linalg.lstsq(foo, neitz)[0]
+        JuddVos_Neitz_transMatrix = np.dot(np.linalg.inv(JuddVos_Neitz_lights),
+                        (tempMat))
+        return JuddVos_Neitz_transMatrix
         
-        self.X = xyz[0, :]
-        self.Y = xyz[1, :]
-        self.Z = xyz[2, :]
+    def _genJuddVos(self):
+        '''
+        '''
+        try:
+            from scipy import interpolate as interp
+        except ImportError:
+            raise ImportError('Sorry cannot import scipy')
+            
+        #lights = np.array([700, 546.1, 435.8])
+        juddVos = np.genfromtxt('static/data/ciexyzjv.csv', delimiter=',')
+        spec = juddVos[:, 0]
+        juddVos = juddVos[:, 1:]
+
+        juddVos[:, 0] *= 100. / sum(juddVos[:, 0]) 
+        juddVos[:, 1] *= 100. / sum(juddVos[:, 1])
+        juddVos[:, 2] *= 100. / sum(juddVos[:, 2])
+        r, g, b = self.TrichromaticEquation(juddVos[:, 0], 
+                                            juddVos[:, 1],
+                                            juddVos[:, 2])
+        juddVos[:, 0], juddVos[:, 1], juddVos[:, 2] = r, g, b
+
+        L_spline = interp.splrep(spec, juddVos[:, 0], s=0)
+        M_spline = interp.splrep(spec, juddVos[:, 1], s=0)
+        S_spline = interp.splrep(spec, juddVos[:, 2], s=0)
+        L_interp = interp.splev(self.spectrum, L_spline, der=0)
+        M_interp = interp.splev(self.spectrum, M_spline, der=0)
+        S_interp = interp.splev(self.spectrum, S_spline, der=0)
+
+        JVinterp = np.array([L_interp, M_interp, S_interp]).T      
         
-        self._plotColorSpace(xyz[0, :], xyz[1, :], self.spectrum)
-        plt.show()            
+        return JVinterp
+        
+    def returnConvMat(self):
+        '''
+        '''
+        return self.convMatrix
+    
+    def returnCMFs(self):
+        '''
+        '''
+        return {'cmfs': self.CMFs, 'wavelengths': self.spectrum, }
+    
+    def return_rgb(self):
+        '''
+        '''
+        return {'r': self.rVal, 'g': self.gVal, 'b': self.bVal, }
 
     def plotConeSpace(self):
         '''
@@ -628,56 +575,14 @@ class colorSpace(object):
         self._plotColorSpace(self.Lnorm, self.Mnorm, self.spectrum)
         plt.show()
 
-
-    def genXYZold(self):
-        '''
-        '''
-        #LMS = np.array([self.Lnorm, self.Mnorm, self.Snorm])
-        #cmfs = np.dot(np.linalg.inv(self.convMatrix), LMS)
-
-        R = self.rVal
-        G = self.gVal
-        B = self.bVal
-        
-        x_r = np.interp(self.lights['l'], self.spectrum, R)
-        y_r = np.interp(self.lights['l'], self.spectrum, G)
-        x_g = np.interp(self.lights['m'], self.spectrum, R)
-        y_g = np.interp(self.lights['m'], self.spectrum, G)
-        x_b = np.interp(self.lights['s'], self.spectrum, R)
-        y_b = np.interp(self.lights['s'], self.spectrum, G)
-
-        print x_r, y_r, x_g, y_g, x_b, y_b
-        
-        conv = np.array([[x_r / y_r, 1.0, (1 - x_r - y_r) / y_r],
-                         [x_g / y_g, 1.0, (1 - x_g - y_g) / y_g],
-                         [0, 1.0, 0]])
-        print conv
-        #s = np.dot(np.linalg.inv(conv), np.array([1./3., 1./3., 1./3.]))
-        #print s
-        #M = conv * np.array([1./3., 1./3., 1./3.])
-        #print M
-        ''' 
-        convXYZ= np.array([[0.5,  0.31, 0.20],
-                           [0.16, 0.38, 0.03],
-                           [0.90, 0.91, 0.99]]) / 0.57697
-                 
-        convXYZ = np.array([[2.768892, 1.751748, 1.130160],
-                            [1.000000, 4.590700, 0.060100],
-                            [0,        0.056508, 5.594292]])'''
-                            
-        rgb = np.array([R, G, B])
-        XYZ = np.dot(conv, rgb)
-        self.X = XYZ[0, :]
-        self.Y = XYZ[1, :]
-        self.Z = XYZ[2, :]
-        
-        plt.figure()
-        plt.plot(self.X, self.Y)
-        plt.show()
-
     def plotLUV(self):
         '''
         '''
+        # make sure stim is cie 1931 and fundamentals neitz
+        self.__init__(fundamental='neitz',
+                                 LMSpeaks=[559.0, 530.0, 421.0],
+                                 stim='cie 1931')
+        
         self.genXYZ()
         u = 4 * self.X / (-2 * self.X + 12 * self.Y + 3)
         v = 9 * self.Y / (-2 * self.X + 12 * self.Y + 3)
@@ -689,8 +594,93 @@ class colorSpace(object):
         v = v[ind1:ind2]
         
         self._plotColorSpace(u, v, spectrum, ee=False)
+        self.cs_ax.axes.get_xaxis().set_visible(False)
+        self.cs_ax.axes.get_yaxis().set_visible(False)
+        plt.axis('off')
+        plt.show()
+
+    def plotKaiser(self, neitz=False, confusion=None):
+        '''
+        
+        '''
+        try:
+            from matplotlib.patches import Wedge
+        except ImportError:
+            raise ImportError('Sorry no patches module found')
+            
+        sub1_Neitz, sub2_Neitz, jv = self.genKaiser(neitz)
+
+        if neitz:
+            self._plotColorSpace()
+            confusion = False
+        else:
+            self._plotColorSpace(rVal=jv[:, 0], gVal=jv[:, 1],
+                                 spec=self.spectrum)
+            self.cs_ax.plot([jv[-1, 0], jv[0, 0]], 
+                            [jv[-1, 1], jv[0, 1]], 'k-', linewidth=3)
+            self.cs_ax.set_ylim([0, 0.9])
+            self.cs_ax.set_xlim([-0.05, 0.8])
+            if not confusion:
+                confusion = True
+            
+        self.cs_ax.plot(sub1_Neitz[:, 0], sub1_Neitz[:, 1], 'rx', 
+                        markersize=8, linewidth=2)
+        self.cs_ax.plot(sub2_Neitz[:, 0], sub2_Neitz[:, 1], 'bx',
+                        markersize=8, linewidth=2)
+
+        self.cs_ax.set_xlabel('x', fontsize=10)
+        self.cs_ax.set_ylabel('y', fontsize=10)
+        
+        plt.tight_layout()
         plt.show()
         
+        if confusion:
+            ## plot confusion lines
+            clip_area = Wedge((jv[0, 0], jv[0, 1]), r=10, theta1=0, theta2=360)
+            CIEcopunctuals = {'deutan': np.array([1.10, -0.1, 0.1]),
+                              'protan': np.array([0.753, 0.247, 0]), 
+                              'tritan': np.array([0.17, 0, 0.83]),
+                              }
+            for deficit in CIEcopunctuals:
+                self._plotColorSpace(rVal=jv[:, 0], gVal=jv[:, 1],
+                                         spec=self.spectrum)     
+                
+                print deficit, ': ', CIEcopunctuals[deficit]
+                
+                if deficit.lower() == 'deutan' or deficit.lower() == 'protan':
+                    lambdas = [420, 460, 470, 480, 490, 500, 515,]
+                elif deficit.lower() == 'tritan':
+                    lambdas = [420, 460, 480, 500, 520, 535, 545, 555,
+                               570, 585, 600, 625, 700]
+                
+                self.cs_ax.plot(CIEcopunctuals[deficit][0],
+                                CIEcopunctuals[deficit][1], 'ko', markersize=8)
+                for lam in lambdas:
+                    R, G, B = jv[:, 0], jv[:, 1], jv[:, 2]
+                    self.cs_ax.plot([self.find_testLightMatch(lam, 
+                                        R, G, B)[0],
+                                     CIEcopunctuals[deficit][0]],
+    
+                                    [self.find_testLightMatch(lam, 
+                                        R, G, B)[1],
+                                     CIEcopunctuals[deficit][1]],
+                                    'k-', linewidth=1) 
+                    self.cs_ax.plot([jv[-1, 0], jv[0, 0]], 
+                            [jv[-1, 1], jv[0, 1]], 'k-', linewidth=3)
+                            
+                    self.cs_ax.set_clip_path(clip_area)
+                    
+                self.cs_ax.set_ylim([-0.12, 0.9])
+                self.cs_ax.set_xlim([-0.05, 1.15])          
+                self.cs_ax.set_xlabel('x', fontsize=10)
+                self.cs_ax.set_ylabel('y', fontsize=10)
+                self.cs_ax.text(0.8, 1, deficit, fontsize=18,
+                                horizontalalignment='right',
+                                verticalalignment='top',
+                                transform=self.cs_ax.transAxes)
+                plt.tight_layout()
+                plt.show()        
+                
     def plotCompare(self, compare=['stockman', 'stockSpecSens', 'neitz']):
         '''
             '''
@@ -957,7 +947,7 @@ if __name__ == '__main__':
     #color.plotColorSpace()
     #color.plotConfusionLines()
     #color.plotBYsystem(PRINT=True)
-    #color.plotKaiser()
+    color.plotKaiser(neitz=True)
     #color.trichromaticAnalysis()
     #color.tetrachromaticAnalysis()
     #color.plotConeSpace()
