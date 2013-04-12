@@ -4,11 +4,6 @@ import numpy as np
 
 from spectsens import spectsens
 
-if __name__ != '__main__':
-    from NeitzModel import settings
-    STATIC_ROOT = settings.STATIC_ROOT
-## todo:: Create a logging function.
-
 class colorSpace(object):
     '''
     '''
@@ -31,7 +26,7 @@ class colorSpace(object):
         if len(LMSpeaks) != 3:
             print 'LMSpeaks must be length 3! Using defaults: 559, 530, 417nm'
             LMSpeaks = [559.0, 530.0, 421.0]
-        
+            
         if fundamental.lower() == 'stockman':
             ind = len(self.spectrum)
             foo = np.genfromtxt(STATIC_ROOT + 
@@ -931,6 +926,11 @@ class colorSpace(object):
         plt.tight_layout()
         #plt.show()
 
+
+if __name__ != '__main__':
+    from NeitzModel import settings
+    STATIC_ROOT = settings.STATIC_ROOT
+## todo:: Create a logging function.
 
 if __name__ == '__main__':
     

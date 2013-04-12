@@ -8,7 +8,7 @@ from emmetrop.emmetrop.cones import dogRFields as df
 from emmetrop.emmetrop.scene import powerlaw
 
 # color model imports
-from color import NeitzColorSpace as cs
+from color import colorSpace as cs
 
 schemEye = eye.eyeModel.SchematicEye().returnOSLOdata()
 powerlaw = powerlaw.normPowerlaw
